@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Paul1k96/microservices_course_boilerplate/pkg/proto/gen/user_v1"
+	"github.com/Paul1k96/microservices_course_auth/pkg/proto/gen/user_v1"
 	"github.com/brianvoe/gofakeit/v7"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -28,11 +28,13 @@ type User struct {
 	UpdatedAt time.Time
 }
 
+// UsersMap represents users repository.
 type UsersMap struct {
 	users map[int64]User
 	mu    sync.RWMutex
 }
 
+// NewUsers creates a new users repository.
 func NewUsers() *UsersMap {
 	return &UsersMap{
 		users: make(map[int64]User),
@@ -98,9 +100,10 @@ func NewUserAPI(logger *slog.Logger, userRepo UsersRepository) *UserAPI {
 // Create new user.
 func (u UserAPI) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
 	logger := u.logger.
-		With("method", "Create")
-
-	logger.Info("create new user", slog.Any("request", request))
+		With("method", "Create").
+		With("name", request.Name).
+		With("email", request.Email).
+		With("role", request.Role)
 
 	createTime := time.Now()
 
@@ -126,9 +129,8 @@ func (u UserAPI) Create(ctx context.Context, request *user_v1.CreateRequest) (*u
 // Get user by id.
 func (u UserAPI) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
 	logger := u.logger.
-		With("method", "Get")
-
-	logger.Info("get user by id", slog.Any("request", request))
+		With("method", "Get").
+		With("user_id", request.Id)
 
 	user, err := u.userRepo.Get(ctx, request.Id)
 	if err != nil {
@@ -149,9 +151,8 @@ func (u UserAPI) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1
 // Update user fields.
 func (u UserAPI) Update(ctx context.Context, request *user_v1.UpdateRequest) (*user_v1.UpdateResponse, error) {
 	logger := u.logger.
-		With("method", "Update")
-
-	logger.Info("update user", slog.Any("request", request))
+		With("method", "Update").
+		With("user_id", request.Id)
 
 	user, err := u.userRepo.Get(ctx, request.Id)
 	if err != nil {
@@ -179,9 +180,8 @@ func (u UserAPI) Update(ctx context.Context, request *user_v1.UpdateRequest) (*u
 // Delete user by id.
 func (u UserAPI) Delete(ctx context.Context, request *user_v1.DeleteRequest) (*user_v1.DeleteResponse, error) {
 	logger := u.logger.
-		With("method", "Delete")
-
-	logger.Info("delete user", slog.Any("request", request))
+		With("method", "Delete").
+		With("user_id", request.Id)
 
 	err := u.userRepo.Delete(ctx, request.Id)
 	if err != nil {
