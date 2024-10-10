@@ -60,6 +60,7 @@ message DeleteResponse {
 }
 
 enum Role {
-    USER = 0;
-    ADMIN = 1;
+    UNKNOWN = 0;
+    USER = 1;
+    ADMIN = 2;
 }

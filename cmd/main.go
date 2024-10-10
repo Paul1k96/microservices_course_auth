@@ -45,6 +45,7 @@ func NewUsers() *UsersMap {
 func (u *UsersMap) Create(_ context.Context, user User) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
+
 	u.users[user.ID] = user
 
 	return nil
@@ -54,10 +55,12 @@ func (u *UsersMap) Create(_ context.Context, user User) error {
 func (u *UsersMap) Get(_ context.Context, id int64) (User, error) {
 	u.mu.RLock()
 	defer u.mu.RUnlock()
+
 	user, ok := u.users[id]
 	if !ok {
 		return User{}, fmt.Errorf("user with id %d not found", id)
 	}
+
 	return user, nil
 }
 
@@ -65,7 +68,9 @@ func (u *UsersMap) Get(_ context.Context, id int64) (User, error) {
 func (u *UsersMap) Delete(_ context.Context, id int64) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
+
 	delete(u.users, id)
+
 	return nil
 }
 
@@ -73,7 +78,9 @@ func (u *UsersMap) Delete(_ context.Context, id int64) error {
 func (u *UsersMap) Update(_ context.Context, id int64, user User) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
+
 	u.users[id] = user
+
 	return nil
 }
 
