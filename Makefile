@@ -21,3 +21,10 @@ go/lint:
 
 go/test:
 	go test -v ./...
+
+build:
+	GOOS=linux GOARCH=amd64 go build -o bin/server cmd/main.go
+
+docker-build-and-push:
+	docker buildx build --no-cache --platform linux/amd64 -t paul1k888/microservice_course_auth:v0.0.1 .
+	docker push paul1k888/microservice_course_auth:v0.0.1
