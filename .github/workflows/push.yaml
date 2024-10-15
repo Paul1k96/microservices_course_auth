@@ -3,11 +3,18 @@ name: push
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 env:
   REGISTRY: "docker.io"
   IMAGE_NAME: "paul1k888/microservice_course_auth"
-  CONTAINER_NAME: "auth-service"
+  IMAGE_NAME_MIGRATION: "paul1k888/microservice_course_auth_migration"
+  CONTAINER_NAME: "auth-svc"
+  CONTAINER_NAME_MIGRATION: "auth-migration"
+  CONTAINER_NAME_DB: "auth-db"
+  IMAGE_POSTGRES: "postgres:14-alpine"
+  MIGRATION_DIR: "./migrations"
 
 jobs:
   build-and-test:
@@ -85,11 +92,19 @@ jobs:
       - name: Login to Docker Registry
         run: docker login -u ${{ secrets.REGISTRY_USERNAME }} -p '${{ secrets.REGISTRY_PASSWORD }}' $REGISTRY
 
+      - name: Build and push migration
+        run: |
+          TAG_NAME=$(echo $GITHUB_SHA | head -c7)
+          docker buildx create --use
+          docker buildx build --no-cache --push \
+          --tag $REGISTRY/$IMAGE_NAME_MIGRATION:$TAG_NAME -f migrator.Dockerfile .
+
       - name: Build and Push Docker Image
         run: |
           TAG_NAME=$(echo $GITHUB_SHA | head -c7)
           docker buildx create --use
-          docker buildx build --no-cache --push --tag $REGISTRY/$IMAGE_NAME:$TAG_NAME -f Dockerfile .
+          docker buildx build --no-cache --push \
+          --tag $REGISTRY/$IMAGE_NAME:$TAG_NAME -f Dockerfile .
 
   deploy-image:
     runs-on: ubuntu-latest
@@ -102,13 +117,36 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_SSH_USERNAME }}
           password: ${{ secrets.SERVER_SSH_PASSWORD }}
-          envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME
+          envs: IMAGE_NAME,REGISTRY,GITHUB_SHA,CONTAINER_NAME,IMAGE_NAME_MIGRATION,CONTAINER_NAME_MIGRATION,CONTAINER_NAME_DB,IMAGE_POSTGRES,MIGRATION_DIR
           script: |
             # Set up variables
             TAG_NAME=$(echo $GITHUB_SHA | head -c7)
             
             # Login into Selectel Registry
             docker login -u ${{ secrets.REGISTRY_USERNAME }} -p '${{ secrets.REGISTRY_PASSWORD }}' $REGISTRY
+            
+            # Create networks
+            docker network create --internal auth_internal_network
+            docker network create universe
+            
+            # Run postgres, if not exists
+            docker run -d \
+            --env POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+            --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+            --env POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
+            -p ${{ secrets.POSTGRES_PORT }}:5432 \
+            -v auth_postgres:/var/lib/postgresql/data \
+            --name $CONTAINER_NAME_DB \
+            --network auth_internal_network \
+            -t $REGISTRY/$IMAGE_POSTGRES
+            
+            # Update migration
+            docker run -d --name $CONTAINER_NAME_MIGRATION \
+            --env MIGRATION_DSN="host=$CONTAINER_NAME_DB user=${{ secrets.POSTGRES_USER }} password=${{ secrets.POSTGRES_PASSWORD }} dbname=${{ secrets.POSTGRES_DB }} sslmode=disable" \
+            --env MIGRATION_DIR=$MIGRATION_DIR \
+            --restart on-failure \
+            --network auth_internal_network \
+            -t $REGISTRY/$IMAGE_NAME_MIGRATION:$TAG_NAME
             
             # Stop running container
             docker stop $CONTAINER_NAME
@@ -117,4 +155,10 @@ jobs:
             docker rm $CONTAINER_NAME
             
             # Run a new container from a new image
-            docker run -d -p 50051:50051 --name $CONTAINER_NAME -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
+            docker run -d -p 50051:50051 --name $CONTAINER_NAME \
+            --network auth_internal_network \
+            -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
+            
+            # Connect service to external network
+            docker network connect universe $CONTAINER_NAME
+            docker network connect universe $CONTAINER_NAME_DB
