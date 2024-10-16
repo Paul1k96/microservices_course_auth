@@ -3,8 +3,6 @@ name: push
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 env:
   REGISTRY: "docker.io"
@@ -131,9 +129,9 @@ jobs:
             
             # Run postgres, if not exists
             docker run -d \
-            --env POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
-            --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
-            --env POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
+            -e POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+            -e POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+            -e POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
             -p ${{ secrets.POSTGRES_PORT }}:5432 \
             -v auth_postgres:/var/lib/postgresql/data \
             --name $CONTAINER_NAME_DB \
@@ -141,10 +139,10 @@ jobs:
             -t $REGISTRY/$IMAGE_POSTGRES
             
             # Stop running migration container
-            docker stop $IMAGE_NAME_MIGRATION
+            docker stop $CONTAINER_NAME_MIGRATION
             
             # Remove old migration container
-            docker rm $IMAGE_NAME_MIGRATION
+            docker rm $CONTAINER_NAME_MIGRATION
             
             # Update migration
             docker run -d --name $CONTAINER_NAME_MIGRATION \
@@ -162,9 +160,15 @@ jobs:
             
             # Run a new container from a new image
             docker run -d -p 50051:50051 --name $CONTAINER_NAME \
+            --env POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
+            --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
+            --env POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
+            --env POSTGRES_HOST=$CONTAINER_NAME_DB \
+            --env POSTGRES_PORT=5432 \
+            --env GRPC_PORT=${{ secrets.GRPC_PORT }} \
             --network auth_internal_network \
             -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
             
             # Connect service to external network
             docker network connect universe $CONTAINER_NAME
-            docker network connect universe $CONTAINER_NAME_DB
+            docker network connect universe $CONTAINER_NAME_DB || true
