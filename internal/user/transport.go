@@ -31,12 +31,17 @@ func NewUserAPI(logger *slog.Logger, userRepo UsersRepository) *API {
 }
 
 // Create new user.
-func (u API) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
+func (u *API) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
 	logger := u.logger.
 		With("method", "Create").
 		With("name", request.Name).
 		With("email", request.Email).
 		With("role", request.Role)
+
+	if err := u.checkConfirmPassword(request.Password, request.PasswordConfirm); err != nil {
+		logger.Error("failed to check confirm password", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("failed to check confirm password: %w", err)
+	}
 
 	createTime := time.Now()
 
@@ -44,7 +49,7 @@ func (u API) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_
 		Name:      request.Name,
 		Email:     request.Email,
 		Password:  request.Password,
-		Role:      request.Role,
+		Role:      Role(request.Role),
 		CreatedAt: createTime,
 		UpdatedAt: createTime,
 	}
@@ -58,8 +63,15 @@ func (u API) Create(ctx context.Context, request *user_v1.CreateRequest) (*user_
 	return &user_v1.CreateResponse{Id: int64(*userID)}, nil
 }
 
+func (u *API) checkConfirmPassword(password, confirmPassword string) error {
+	if password != confirmPassword {
+		return fmt.Errorf("password and confirm password do not match")
+	}
+	return nil
+}
+
 // Get user by id.
-func (u API) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
+func (u *API) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.GetResponse, error) {
 	logger := u.logger.
 		With("method", "Get").
 		With("user_id", request.Id)
@@ -74,14 +86,14 @@ func (u API) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.Get
 		Id:        user.ID,
 		Name:      user.Name,
 		Email:     user.Email,
-		Role:      user.Role,
+		Role:      user_v1.Role(user.Role),
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}, nil
 }
 
 // Update user fields.
-func (u API) Update(ctx context.Context, request *user_v1.UpdateRequest) (*user_v1.UpdateResponse, error) {
+func (u *API) Update(ctx context.Context, request *user_v1.UpdateRequest) (*user_v1.UpdateResponse, error) {
 	logger := u.logger.
 		With("method", "Update").
 		With("user_id", request.Id)
@@ -98,7 +110,7 @@ func (u API) Update(ctx context.Context, request *user_v1.UpdateRequest) (*user_
 	if request.Email != nil {
 		user.Email = request.Email.Value
 	}
-	user.Role = request.Role
+	user.Role = Role(request.Role)
 
 	err = u.userRepo.Update(ctx, request.Id, user)
 	if err != nil {
@@ -110,7 +122,7 @@ func (u API) Update(ctx context.Context, request *user_v1.UpdateRequest) (*user_
 }
 
 // Delete user by id.
-func (u API) Delete(ctx context.Context, request *user_v1.DeleteRequest) (*user_v1.DeleteResponse, error) {
+func (u *API) Delete(ctx context.Context, request *user_v1.DeleteRequest) (*user_v1.DeleteResponse, error) {
 	logger := u.logger.
 		With("method", "Delete").
 		With("user_id", request.Id)

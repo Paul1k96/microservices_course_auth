@@ -159,7 +159,7 @@ jobs:
             docker rm $CONTAINER_NAME
             
             # Run a new container from a new image
-            docker run -d -p 50051:50051 --name $CONTAINER_NAME \
+            docker run -d -p ${{ secrets.GRPC_PORT }}:50051 --name $CONTAINER_NAME \
             --env POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
             --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
             --env POSTGRES_DB=${{ secrets.POSTGRES_DB }} \

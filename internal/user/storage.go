@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/Paul1k96/microservices_course_auth/pkg/proto/gen/user_v1"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -36,14 +35,14 @@ func (u userRaw) toDomain() User {
 	return user
 }
 
-func (u userRaw) getRole() user_v1.Role {
+func (u userRaw) getRole() Role {
 	switch u.Role {
 	case "ADMIN":
-		return user_v1.Role_ADMIN
+		return RoleAdmin
 	case "USER":
-		return user_v1.Role_USER
+		return RoleUser
 	default:
-		return user_v1.Role_UNKNOWN
+		return RoleUnspecified
 	}
 }
 
@@ -58,7 +57,7 @@ func NewUserRepository(pg *sqlx.DB) *Repository {
 }
 
 // Create user.
-func (u Repository) Create(ctx context.Context, user User) (*int, error) {
+func (u *Repository) Create(ctx context.Context, user User) (*int, error) {
 	queryBuilder := sq.Insert(userTable).
 		PlaceholderFormat(sq.Dollar).
 		Columns("name", "email", "password", "role").
@@ -80,7 +79,7 @@ func (u Repository) Create(ctx context.Context, user User) (*int, error) {
 }
 
 // Get user by id.
-func (u Repository) Get(ctx context.Context, id int64) (User, error) {
+func (u *Repository) Get(ctx context.Context, id int64) (User, error) {
 	queryBuilder := sq.Select("*").
 		PlaceholderFormat(sq.Dollar).
 		From(userTable).
@@ -102,7 +101,7 @@ func (u Repository) Get(ctx context.Context, id int64) (User, error) {
 
 // Update user by id.
 // If user.Name or user.Email is empty, this field will not be updated.
-func (u Repository) Update(ctx context.Context, id int64, user User) error {
+func (u *Repository) Update(ctx context.Context, id int64, user User) error {
 	queryBuilder := u.setUserDataForUpdate(id, user)
 
 	query, args, err := queryBuilder.ToSql()
@@ -118,7 +117,7 @@ func (u Repository) Update(ctx context.Context, id int64, user User) error {
 	return nil
 }
 
-func (u Repository) setUserDataForUpdate(id int64, user User) sq.UpdateBuilder {
+func (u *Repository) setUserDataForUpdate(id int64, user User) sq.UpdateBuilder {
 	queryBuilder := sq.Update(userTable).
 		PlaceholderFormat(sq.Dollar).
 		Set("Role", user.Role.String()).
@@ -135,7 +134,7 @@ func (u Repository) setUserDataForUpdate(id int64, user User) sq.UpdateBuilder {
 }
 
 // Delete user by id.
-func (u Repository) Delete(ctx context.Context, id int64) error {
+func (u *Repository) Delete(ctx context.Context, id int64) error {
 	queryBuilder := sq.Delete(userTable).
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{"ID": id})

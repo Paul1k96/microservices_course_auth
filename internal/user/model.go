@@ -2,9 +2,9 @@ package user
 
 import (
 	"time"
-
-	"github.com/Paul1k96/microservices_course_auth/pkg/proto/gen/user_v1"
 )
+
+//go:generate go run github.com/dmarkham/enumer -transform snake-upper -trimprefix Role -type Role -output role_string.go model.go
 
 // User represents user model.
 type User struct {
@@ -12,7 +12,17 @@ type User struct {
 	Name      string
 	Email     string
 	Password  string
-	Role      user_v1.Role
+	Role      Role
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+// Role represents user role.
+type Role int32
+
+// User roles.
+const (
+	RoleUnspecified Role = iota // default value
+	RoleAdmin
+	RoleUser
+)
