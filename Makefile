@@ -14,7 +14,10 @@ get-deps:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
 	go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
-generate: generate/proto
+generate: generate/proto generate/go
+
+generate/go:
+	@go generate ./...
 
 generate/proto:
 	@sh ./scripts/proto/generate.sh
