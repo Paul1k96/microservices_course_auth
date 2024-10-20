@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -9,16 +10,29 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const userTable = "users"
+// Table names.
+const (
+	userTable = "users"
+)
+
+// Column names.
+const (
+	idColumn       = "id"
+	nameColumn     = "name"
+	emailColumn    = "email"
+	passwordColumn = "password"
+	roleColumn     = "role"
+	updateAtColumn = "updated_at"
+)
 
 type userRaw struct {
-	ID        int64     `db:"id"`
-	Name      string    `db:"name"`
-	Email     string    `db:"email"`
-	Password  string    `db:"password"`
-	Role      string    `db:"role"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        int64        `db:"id"`
+	Name      string       `db:"name"`
+	Email     string       `db:"email"`
+	Password  string       `db:"password"`
+	Role      string       `db:"role"`
+	CreatedAt time.Time    `db:"created_at"`
+	UpdatedAt sql.NullTime `db:"updated_at"`
 }
 
 func (u userRaw) toDomain() User {
@@ -30,7 +44,9 @@ func (u userRaw) toDomain() User {
 	user.Password = u.Password
 	user.Role = u.getRole()
 	user.CreatedAt = u.CreatedAt
-	user.UpdatedAt = u.UpdatedAt
+	if u.UpdatedAt.Valid {
+		user.UpdatedAt = &u.UpdatedAt.Time
+	}
 
 	return user
 }
@@ -42,7 +58,7 @@ func (u userRaw) getRole() Role {
 	case "USER":
 		return RoleUser
 	default:
-		return RoleUnspecified
+		return RoleUnknown
 	}
 }
 
@@ -57,33 +73,34 @@ func NewUserRepository(pg *sqlx.DB) *Repository {
 }
 
 // Create user.
-func (u *Repository) Create(ctx context.Context, user User) (*int, error) {
+func (r *Repository) Create(ctx context.Context, user User) (int, error) {
+	var userID int
+
 	queryBuilder := sq.Insert(userTable).
 		PlaceholderFormat(sq.Dollar).
-		Columns("name", "email", "password", "role").
+		Columns(nameColumn, emailColumn, passwordColumn, roleColumn).
 		Values(user.Name, user.Email, user.Password, user.Role.String()).
 		Suffix("RETURNING id")
 
 	query, args, err := queryBuilder.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("build query: %w", err)
+		return userID, fmt.Errorf("build query: %w", err)
 	}
 
-	var userID int
-	err = u.pg.QueryRowxContext(ctx, query, args...).Scan(&userID)
+	err = r.pg.QueryRowxContext(ctx, query, args...).Scan(&userID)
 	if err != nil {
-		return nil, fmt.Errorf("exec query: %w", err)
+		return userID, fmt.Errorf("exec query: %w", err)
 	}
 
-	return &userID, nil
+	return userID, nil
 }
 
 // Get user by id.
-func (u *Repository) Get(ctx context.Context, id int64) (User, error) {
+func (r *Repository) Get(ctx context.Context, id int64) (User, error) {
 	queryBuilder := sq.Select("*").
 		PlaceholderFormat(sq.Dollar).
 		From(userTable).
-		Where(sq.Eq{"id": id})
+		Where(sq.Eq{idColumn: id})
 
 	query, args, err := queryBuilder.ToSql()
 	if err != nil {
@@ -91,7 +108,7 @@ func (u *Repository) Get(ctx context.Context, id int64) (User, error) {
 	}
 
 	var user userRaw
-	err = u.pg.GetContext(ctx, &user, query, args...)
+	err = r.pg.GetContext(ctx, &user, query, args...)
 	if err != nil {
 		return User{}, fmt.Errorf("get user: %w", err)
 	}
@@ -101,15 +118,15 @@ func (u *Repository) Get(ctx context.Context, id int64) (User, error) {
 
 // Update user by id.
 // If user.Name or user.Email is empty, this field will not be updated.
-func (u *Repository) Update(ctx context.Context, id int64, user User) error {
-	queryBuilder := u.setUserDataForUpdate(id, user)
+func (r *Repository) Update(ctx context.Context, id int64, user User) error {
+	queryBuilder := r.setUserDataForUpdate(id, user)
 
 	query, args, err := queryBuilder.ToSql()
 	if err != nil {
 		return fmt.Errorf("build query: %w", err)
 	}
 
-	_, err = u.pg.ExecContext(ctx, query, args...)
+	_, err = r.pg.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("exec query: %w", err)
 	}
@@ -117,11 +134,12 @@ func (u *Repository) Update(ctx context.Context, id int64, user User) error {
 	return nil
 }
 
-func (u *Repository) setUserDataForUpdate(id int64, user User) sq.UpdateBuilder {
+func (r *Repository) setUserDataForUpdate(id int64, user User) sq.UpdateBuilder {
 	queryBuilder := sq.Update(userTable).
 		PlaceholderFormat(sq.Dollar).
-		Set("Role", user.Role.String()).
-		Where(sq.Eq{"id": id})
+		Set(roleColumn, user.Role.String()).
+		Set(updateAtColumn, user.UpdatedAt).
+		Where(sq.Eq{idColumn: id})
 
 	if user.Name != "" {
 		queryBuilder = queryBuilder.Set("Name", user.Name)
@@ -134,17 +152,17 @@ func (u *Repository) setUserDataForUpdate(id int64, user User) sq.UpdateBuilder 
 }
 
 // Delete user by id.
-func (u *Repository) Delete(ctx context.Context, id int64) error {
+func (r *Repository) Delete(ctx context.Context, id int64) error {
 	queryBuilder := sq.Delete(userTable).
 		PlaceholderFormat(sq.Dollar).
-		Where(sq.Eq{"ID": id})
+		Where(sq.Eq{idColumn: id})
 
 	query, args, err := queryBuilder.ToSql()
 	if err != nil {
 		return fmt.Errorf("build query: %w", err)
 	}
 
-	_, err = u.pg.ExecContext(ctx, query, args...)
+	_, err = r.pg.ExecContext(ctx, query, args...)
 	if err != nil {
 		return fmt.Errorf("exec query: %w", err)
 	}

@@ -12,7 +12,7 @@ import (
 
 // UsersRepository represents user repository.
 type UsersRepository interface {
-	Create(ctx context.Context, user User) (*int, error)
+	Create(ctx context.Context, user User) (int, error)
 	Get(ctx context.Context, id int64) (User, error)
 	Update(ctx context.Context, id int64, user User) error
 	Delete(ctx context.Context, id int64) error
@@ -51,7 +51,7 @@ func (u *API) Create(ctx context.Context, request *user_v1.CreateRequest) (*user
 		Password:  request.Password,
 		Role:      Role(request.Role),
 		CreatedAt: createTime,
-		UpdatedAt: createTime,
+		UpdatedAt: &createTime,
 	}
 
 	userID, err := u.userRepo.Create(ctx, user)
@@ -60,7 +60,7 @@ func (u *API) Create(ctx context.Context, request *user_v1.CreateRequest) (*user
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	return &user_v1.CreateResponse{Id: int64(*userID)}, nil
+	return &user_v1.CreateResponse{Id: int64(userID)}, nil
 }
 
 func (u *API) checkConfirmPassword(password, confirmPassword string) error {
@@ -88,7 +88,7 @@ func (u *API) Get(ctx context.Context, request *user_v1.GetRequest) (*user_v1.Ge
 		Email:     user.Email,
 		Role:      user_v1.Role(user.Role),
 		CreatedAt: timestamppb.New(user.CreatedAt),
-		UpdatedAt: timestamppb.New(user.UpdatedAt),
+		UpdatedAt: timestamppb.New(*user.UpdatedAt),
 	}, nil
 }
 
@@ -104,6 +104,8 @@ func (u *API) Update(ctx context.Context, request *user_v1.UpdateRequest) (*user
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
+	updateTime := time.Now()
+	user.UpdatedAt = &updateTime
 	if request.Name != nil {
 		user.Name = request.Name.Value
 	}

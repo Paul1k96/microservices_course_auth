@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _RoleName = "UNSPECIFIEDADMINUSER"
+const _RoleName = "UNKNOWNADMINUSER"
 
-var _RoleIndex = [...]uint8{0, 11, 16, 20}
+var _RoleIndex = [...]uint8{0, 7, 12, 16}
 
-const _RoleLowerName = "unspecifiedadminuser"
+const _RoleLowerName = "unknownadminuser"
 
 func (i Role) String() string {
 	if i < 0 || i >= Role(len(_RoleIndex)-1) {
@@ -24,26 +24,26 @@ func (i Role) String() string {
 // Re-run the stringer command to generate them again.
 func _RoleNoOp() {
 	var x [1]struct{}
-	_ = x[RoleUnspecified-(0)]
+	_ = x[RoleUnknown-(0)]
 	_ = x[RoleAdmin-(1)]
 	_ = x[RoleUser-(2)]
 }
 
-var _RoleValues = []Role{RoleUnspecified, RoleAdmin, RoleUser}
+var _RoleValues = []Role{RoleUnknown, RoleAdmin, RoleUser}
 
 var _RoleNameToValueMap = map[string]Role{
-	_RoleName[0:11]:       RoleUnspecified,
-	_RoleLowerName[0:11]:  RoleUnspecified,
-	_RoleName[11:16]:      RoleAdmin,
-	_RoleLowerName[11:16]: RoleAdmin,
-	_RoleName[16:20]:      RoleUser,
-	_RoleLowerName[16:20]: RoleUser,
+	_RoleName[0:7]:        RoleUnknown,
+	_RoleLowerName[0:7]:   RoleUnknown,
+	_RoleName[7:12]:       RoleAdmin,
+	_RoleLowerName[7:12]:  RoleAdmin,
+	_RoleName[12:16]:      RoleUser,
+	_RoleLowerName[12:16]: RoleUser,
 }
 
 var _RoleNames = []string{
-	_RoleName[0:11],
-	_RoleName[11:16],
-	_RoleName[16:20],
+	_RoleName[0:7],
+	_RoleName[7:12],
+	_RoleName[12:16],
 }
 
 // RoleString retrieves an enum value from the enum constants string name.
