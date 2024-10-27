@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
 	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/mapper"
@@ -20,6 +21,8 @@ func (s *service) Update(ctx context.Context, user *model.User) error {
 			return fmt.Errorf("failed to validate user: %w", err)
 		}
 
+		updateTime := time.Now()
+		user.UpdatedAt = &updateTime
 		if err = s.repo.Update(ctx, mapper.ToRepoUpdateFromUserService(user)); err != nil {
 			return fmt.Errorf("failed to update user: %w", err)
 		}
