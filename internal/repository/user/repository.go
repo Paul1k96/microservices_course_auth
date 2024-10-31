@@ -38,8 +38,6 @@ func NewRepository(pg db.DB) *Repository {
 
 // Create user.
 func (r *Repository) Create(ctx context.Context, user *modelRepo.User) (int64, error) {
-	var userID int64
-
 	queryBuilder := sq.Insert(userTable).
 		PlaceholderFormat(sq.Dollar).
 		Columns(nameColumn, emailColumn, passwordColumn, roleColumn).
@@ -48,7 +46,7 @@ func (r *Repository) Create(ctx context.Context, user *modelRepo.User) (int64, e
 
 	query, args, err := queryBuilder.ToSql()
 	if err != nil {
-		return userID, fmt.Errorf("build query: %w", err)
+		return 0, fmt.Errorf("build query: %w", err)
 	}
 
 	q := db.Query{
@@ -56,9 +54,10 @@ func (r *Repository) Create(ctx context.Context, user *modelRepo.User) (int64, e
 		QueryRaw: query,
 	}
 
+	var userID int64
 	err = r.db.QueryRowContext(ctx, q, args...).Scan(&userID)
 	if err != nil {
-		return userID, fmt.Errorf("exec query: %w", err)
+		return 0, fmt.Errorf("exec query: %w", err)
 	}
 
 	return userID, nil
@@ -78,36 +77,6 @@ func (r *Repository) GetByID(ctx context.Context, id int64) (*model.User, error)
 
 	q := db.Query{
 		Name:     "user_repository.Get",
-		QueryRaw: query,
-	}
-
-	var user modelRepo.User
-	err = r.db.ScanOneContext(ctx, &user, q, args...)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("get user: %w", errs.ErrUserNotFound)
-		}
-
-		return nil, fmt.Errorf("get user: %w", err)
-	}
-
-	return mapper.ToUserFromRepo(&user), nil
-}
-
-// GetByEmail user by email.
-func (r *Repository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
-	queryBuilder := sq.Select("*").
-		PlaceholderFormat(sq.Dollar).
-		From(userTable).
-		Where(sq.Eq{emailColumn: email})
-
-	query, args, err := queryBuilder.ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("build query: %w", err)
-	}
-
-	q := db.Query{
-		Name:     "user_repository.GetByEmail",
 		QueryRaw: query,
 	}
 

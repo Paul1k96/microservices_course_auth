@@ -5,43 +5,31 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/Paul1k96/microservices_course_auth/internal/errs"
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
 	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/mapper"
-	"github.com/pkg/errors"
 )
 
 // Create creates a new user.
 func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
-	var id int64
+	if err := s.validateUser(user); err != nil {
+		return 0, fmt.Errorf("create user: %w", err)
+	}
 
-	if txErr := s.txManager.ReadCommitted(ctx, func(ctx context.Context) error {
-		var err error
-
-		if err = s.validateUser(ctx, user); err != nil {
-			return fmt.Errorf("create user: %w", err)
-		}
-
-		id, err = s.repo.Create(ctx, mapper.ToRepoCreateFromUserService(user))
-		if err != nil {
-			return fmt.Errorf("create user: %w", err)
-		}
-
-		return nil
-	}); txErr != nil {
-		return 0, fmt.Errorf("transaction error: %w", txErr)
+	id, err := s.repo.Create(ctx, mapper.ToRepoCreateFromUserService(user))
+	if err != nil {
+		return 0, fmt.Errorf("create user: %w", err)
 	}
 
 	return id, nil
 }
 
-func (s *service) validateUser(ctx context.Context, user *model.User) error {
+func (s *service) validateUser(user *model.User) error {
 	err := s.validateUserName(user.Name)
 	if err != nil {
 		return fmt.Errorf("validate user: %w", err)
 	}
 
-	err = s.validateUserEmail(ctx, user.Email)
+	err = s.validateUserEmail(user.Email)
 	if err != nil {
 		return fmt.Errorf("validate user: %w", err)
 	}
@@ -98,7 +86,7 @@ func (s *service) checkRestrictedSymbols(name string) error {
 	return nil
 }
 
-func (s *service) validateUserEmail(ctx context.Context, email string) error {
+func (s *service) validateUserEmail(email string) error {
 	err := s.checkUserEmailLength(email)
 	if err != nil {
 		return fmt.Errorf("validate email: %w", err)
@@ -107,11 +95,6 @@ func (s *service) validateUserEmail(ctx context.Context, email string) error {
 	err = s.checkUserEmailFormat(email)
 	if err != nil {
 		return fmt.Errorf("validate email: %w", err)
-	}
-
-	err = s.checkUserExistsByEmail(ctx, email)
-	if err != nil {
-		return fmt.Errorf("validate user: %w", err)
 	}
 
 	return nil
@@ -148,17 +131,4 @@ func (s *service) validateUserRole(role model.Role) error {
 	}
 
 	return fmt.Errorf("role is not valid")
-}
-
-func (s *service) checkUserExistsByEmail(ctx context.Context, email string) error {
-	user, err := s.repo.GetByEmail(ctx, email)
-	if err != nil && !errors.Is(err, errs.ErrUserNotFound) {
-		return fmt.Errorf("check user exists: %w", err)
-	}
-
-	if user != nil {
-		return fmt.Errorf("user with email %s already exists", email)
-	}
-
-	return nil
 }
