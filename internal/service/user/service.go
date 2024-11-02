@@ -1,9 +1,9 @@
 package user
 
 import (
-	"github.com/Paul1k96/microservices_course_auth/internal/client/db"
 	"github.com/Paul1k96/microservices_course_auth/internal/repository"
 	svc "github.com/Paul1k96/microservices_course_auth/internal/service"
+	"github.com/Paul1k96/microservices_course_platform_common/pkg/client/db"
 )
 
 type service struct {

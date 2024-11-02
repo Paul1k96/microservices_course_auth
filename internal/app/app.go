@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/Paul1k96/microservices_course_auth/internal/closer"
 	"github.com/Paul1k96/microservices_course_auth/pkg/proto/gen/user_v1"
+	"github.com/Paul1k96/microservices_course_platform_common/pkg/closer"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"

@@ -6,22 +6,24 @@ import (
 	"log/slog"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/api/user_v1"
-	"github.com/Paul1k96/microservices_course_auth/internal/client/db"
-	"github.com/Paul1k96/microservices_course_auth/internal/client/db/pg"
-	"github.com/Paul1k96/microservices_course_auth/internal/client/db/transaction"
-	"github.com/Paul1k96/microservices_course_auth/internal/closer"
+	"github.com/Paul1k96/microservices_course_platform_common/pkg/client/db/pg"
+	"github.com/Paul1k96/microservices_course_platform_common/pkg/client/db/transaction"
+
 	"github.com/Paul1k96/microservices_course_auth/internal/config"
 	"github.com/Paul1k96/microservices_course_auth/internal/config/env"
 	"github.com/Paul1k96/microservices_course_auth/internal/repository"
 	"github.com/Paul1k96/microservices_course_auth/internal/repository/user"
 	"github.com/Paul1k96/microservices_course_auth/internal/service"
 	userSvc "github.com/Paul1k96/microservices_course_auth/internal/service/user"
+	"github.com/Paul1k96/microservices_course_platform_common/pkg/client/db"
+	"github.com/Paul1k96/microservices_course_platform_common/pkg/closer"
 )
 
 type serviceProvider struct {
-	pgConfig   config.PGConfig
-	grpcConfig config.GRPCConfig
-	logger     *slog.Logger
+	pgConfig    config.PGConfig
+	grpcConfig  config.GRPCConfig
+	redisConfig config.RedisConfig
+	logger      *slog.Logger
 
 	dbClient        db.Client
 	txManager       db.TxManager
@@ -52,6 +54,20 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	}
 
 	return s.grpcConfig
+}
+
+// RedisConfig returns an instance of config.RedisConfig.
+func (s *serviceProvider) RedisConfig() (config.RedisConfig, error) {
+	if s.redisConfig == nil {
+		cfg, err := env.NewRedisConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get redis config: %w", err)
+		}
+
+		s.redisConfig = cfg
+	}
+
+	return s.redisConfig, nil
 }
 
 // DBClient returns an instance of db.Client.

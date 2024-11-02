@@ -4,10 +4,10 @@ go 1.23.2
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/Paul1k96/microservices_course_platform_common v0.1.0
 	github.com/georgysavva/scany v1.2.2
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
-	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	google.golang.org/grpc v1.67.1
