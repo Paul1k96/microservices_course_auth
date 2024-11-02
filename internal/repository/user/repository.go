@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/Paul1k96/microservices_course_auth/internal/client/db"
 	"github.com/Paul1k96/microservices_course_auth/internal/errs"
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
 	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/mapper"
 	modelRepo "github.com/Paul1k96/microservices_course_auth/internal/repository/user/model"
+	"github.com/Paul1k96/microservices_course_platform_common/pkg/client/db"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 )
