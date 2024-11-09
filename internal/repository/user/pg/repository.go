@@ -93,6 +93,32 @@ func (r *Repository) GetByID(ctx context.Context, id int64) (*model.User, error)
 	return mapper.ToUserFromRepo(&user), nil
 }
 
+// GetByIDs returns list of users by ids.
+func (r *Repository) GetByIDs(ctx context.Context, ids []int64) ([]*model.User, error) {
+	queryBuilder := sq.Select("*").
+		PlaceholderFormat(sq.Dollar).
+		From(userTable).
+		Where(sq.Eq{idColumn: ids})
+
+	query, args, err := queryBuilder.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build query: %w", err)
+	}
+
+	q := db.Query{
+		Name:     "user_repository.GetList",
+		QueryRaw: query,
+	}
+
+	var users []*modelRepo.User
+	err = r.db.ScanAllContext(ctx, &users, q, args...)
+	if err != nil {
+		return nil, fmt.Errorf("scan users: %w", err)
+	}
+
+	return mapper.ToUsersFromRepo(users), nil
+}
+
 // Update user by id.
 // If user.Name or user.Email is empty, this field will not be updated.
 func (r *Repository) Update(ctx context.Context, user *model.User) error {

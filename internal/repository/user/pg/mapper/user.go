@@ -5,6 +5,17 @@ import (
 	modelRepo "github.com/Paul1k96/microservices_course_auth/internal/repository/user/pg/model"
 )
 
+// ToUsersFromRepo converts users from repository model to service model.
+func ToUsersFromRepo(users []*modelRepo.User) []*model.User {
+	serviceUsers := make([]*model.User, 0, len(users))
+
+	for _, user := range users {
+		serviceUsers = append(serviceUsers, ToUserFromRepo(user))
+	}
+
+	return serviceUsers
+}
+
 // ToUserFromRepo converts user from repository model to service model.
 func ToUserFromRepo(user *modelRepo.User) *model.User {
 	var serviceUser model.User
@@ -20,22 +31,6 @@ func ToUserFromRepo(user *modelRepo.User) *model.User {
 	}
 
 	return &serviceUser
-}
-
-// ToRepoUpdateFromUserService converts user from service model to repository model.
-func ToRepoUpdateFromUserService(user *model.User) *modelRepo.User {
-	var repoUser modelRepo.User
-
-	repoUser.ID = user.ID
-	repoUser.Name = user.Name
-	repoUser.Email = user.Email
-	repoUser.Role = user.Role.String()
-	if user.UpdatedAt != nil {
-		repoUser.UpdatedAt.Time = *user.UpdatedAt
-		repoUser.UpdatedAt.Valid = true
-	}
-
-	return &repoUser
 }
 
 // ToRoleFromRepo converts role from repository model to service model.

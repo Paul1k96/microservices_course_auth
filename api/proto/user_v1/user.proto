@@ -11,6 +11,7 @@ option go_package = "github.com/Paul1k96/microservices_course_auth/pkg/user_v1;u
 service User {
     rpc Create(CreateRequest) returns (CreateResponse);
     rpc Get(GetRequest) returns (GetResponse);
+    rpc List(GetListRequest) returns (GetListResponse);
     rpc Update(UpdateRequest) returns (UpdateResponse);
     rpc Delete(DeleteRequest) returns (DeleteResponse);
 }
@@ -38,6 +39,14 @@ message GetResponse {
     Role role = 4;
     google.protobuf.Timestamp created_at = 5;
     google.protobuf.Timestamp updated_at = 6;
+}
+
+message GetListRequest {
+    repeated int64 ids = 1;
+}
+
+message GetListResponse {
+    repeated GetResponse users = 1;
 }
 
 message UpdateRequest {
