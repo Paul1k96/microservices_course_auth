@@ -64,6 +64,8 @@ func (s *service) GetListByIDs(ctx context.Context, ids []int64) ([]*model.User,
 			})
 		}
 
+		_ = errGroup.Wait()
+
 		result = append(result, users...)
 	}
 

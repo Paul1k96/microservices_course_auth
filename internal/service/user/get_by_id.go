@@ -31,7 +31,7 @@ func (s *service) GetByID(ctx context.Context, id int64) (*model.User, error) {
 	}
 
 	if user == nil {
-		return nil, fmt.Errorf("user with id %d not found", id)
+		return nil, errs.ErrUserNotFound
 	}
 
 	_ = s.cache.Set(ctx, user)

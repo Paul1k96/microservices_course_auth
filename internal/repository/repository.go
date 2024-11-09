@@ -6,6 +6,8 @@ import (
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
 )
 
+//go:generate ../../bin/mockgen -source $GOFILE -destination "mocks/repository.go" -package "mocks"
+
 // UsersRepository represents user repository.
 type UsersRepository interface {
 	Create(ctx context.Context, user *model.User) (int64, error)
