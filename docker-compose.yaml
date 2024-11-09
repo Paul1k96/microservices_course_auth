@@ -29,6 +29,7 @@ services:
     ports:
       - "6430:5432"
     networks:
+      - auth_db
       - cluster
 
   auth_cache:
@@ -49,7 +50,10 @@ services:
       - local.env
     environment:
       DB_HOST: auth_db
+    networks:
+      - auth_db
 
 networks:
+  auth_db:
   cluster:
     external: true

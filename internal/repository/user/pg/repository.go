@@ -1,4 +1,4 @@
-package user
+package pg
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/Paul1k96/microservices_course_auth/internal/errs"
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
-	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/mapper"
-	modelRepo "github.com/Paul1k96/microservices_course_auth/internal/repository/user/model"
+	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/pg/mapper"
+	modelRepo "github.com/Paul1k96/microservices_course_auth/internal/repository/user/pg/model"
 	"github.com/Paul1k96/microservices_course_platform_common/pkg/client/db"
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
@@ -37,11 +37,11 @@ func NewRepository(pg db.DB) *Repository {
 }
 
 // Create user.
-func (r *Repository) Create(ctx context.Context, user *modelRepo.User) (int64, error) {
+func (r *Repository) Create(ctx context.Context, user *model.User) (int64, error) {
 	queryBuilder := sq.Insert(userTable).
 		PlaceholderFormat(sq.Dollar).
 		Columns(nameColumn, emailColumn, passwordColumn, roleColumn).
-		Values(user.Name, user.Email, user.Password, user.Role).
+		Values(user.Name, user.Email, user.Password, user.Role.String()).
 		Suffix("RETURNING id")
 
 	query, args, err := queryBuilder.ToSql()
@@ -95,7 +95,7 @@ func (r *Repository) GetByID(ctx context.Context, id int64) (*model.User, error)
 
 // Update user by id.
 // If user.Name or user.Email is empty, this field will not be updated.
-func (r *Repository) Update(ctx context.Context, user *modelRepo.User) error {
+func (r *Repository) Update(ctx context.Context, user *model.User) error {
 	queryBuilder := r.setUserDataForUpdate(user)
 
 	query, args, err := queryBuilder.ToSql()
@@ -116,7 +116,7 @@ func (r *Repository) Update(ctx context.Context, user *modelRepo.User) error {
 	return nil
 }
 
-func (r *Repository) setUserDataForUpdate(user *modelRepo.User) sq.UpdateBuilder {
+func (r *Repository) setUserDataForUpdate(user *model.User) sq.UpdateBuilder {
 	queryBuilder := sq.Update(userTable).
 		PlaceholderFormat(sq.Dollar).
 		Set(roleColumn, user.Role).

@@ -18,4 +18,5 @@ type RedisConfig interface {
 	GetConnectionTimeout() time.Duration
 	GetMaxIdle() int
 	GetIdleTimeout() time.Duration
+	GetUserTTL() time.Duration
 }

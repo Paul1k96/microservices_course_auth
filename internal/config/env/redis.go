@@ -14,6 +14,7 @@ const (
 	redisConnTimeout = "REDIS_CONN_TIMEOUT"
 	redisMaxIdle     = "REDIS_MAX_IDLE"
 	redisIdleTimeout = "REDIS_IDLE_TIMEOUT"
+	redisUserTTL     = "REDIS_USER_TTL"
 )
 
 type redisConfig struct {
@@ -22,6 +23,7 @@ type redisConfig struct {
 	connTimeout time.Duration
 	maxIdle     int
 	idleTimeout time.Duration
+	userTTL     time.Duration
 }
 
 // NewRedisConfig returns a new config.RedisConfig.
@@ -49,6 +51,12 @@ func NewRedisConfig() (config.RedisConfig, error) {
 	}
 	cfg.idleTimeout = idleTimeout
 
+	userTTL, err := time.ParseDuration(os.Getenv(redisUserTTL))
+	if err != nil {
+		return nil, err
+	}
+	cfg.userTTL = userTTL
+
 	return &cfg, nil
 }
 
@@ -70,4 +78,9 @@ func (c *redisConfig) GetMaxIdle() int {
 // GetIdleTimeout returns the idle timeout.
 func (c *redisConfig) GetIdleTimeout() time.Duration {
 	return c.idleTimeout
+}
+
+// GetUserTTL returns the user TTL.
+func (c *redisConfig) GetUserTTL() time.Duration {
+	return c.userTTL
 }

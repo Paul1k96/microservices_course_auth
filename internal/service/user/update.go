@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
-	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/mapper"
 )
 
 // Update updates user.
@@ -18,7 +17,7 @@ func (s *service) Update(ctx context.Context, user *model.User) error {
 
 		updateTime := time.Now()
 		user.UpdatedAt = &updateTime
-		if err := s.repo.Update(ctx, mapper.ToRepoUpdateFromUserService(user)); err != nil {
+		if err := s.repo.Update(ctx, user); err != nil {
 			return fmt.Errorf("failed to update user: %w", err)
 		}
 
@@ -26,6 +25,8 @@ func (s *service) Update(ctx context.Context, user *model.User) error {
 	}); txErr != nil {
 		return fmt.Errorf("transaction error: %w", txErr)
 	}
+
+	_ = s.cache.Set(ctx, user)
 
 	return nil
 }

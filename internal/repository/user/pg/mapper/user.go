@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
-	modelRepo "github.com/Paul1k96/microservices_course_auth/internal/repository/user/model"
+	modelRepo "github.com/Paul1k96/microservices_course_auth/internal/repository/user/pg/model"
 )
 
 // ToUserFromRepo converts user from repository model to service model.
@@ -20,24 +20,6 @@ func ToUserFromRepo(user *modelRepo.User) *model.User {
 	}
 
 	return &serviceUser
-}
-
-// ToRepoCreateFromUserService converts user from service model to repository model.
-func ToRepoCreateFromUserService(user *model.User) *modelRepo.User {
-	var repoUser modelRepo.User
-
-	repoUser.ID = user.ID
-	repoUser.Name = user.Name
-	repoUser.Email = user.Email
-	repoUser.Password = user.Password
-	repoUser.Role = user.Role.String()
-	repoUser.CreatedAt = user.CreatedAt
-	if user.UpdatedAt != nil {
-		repoUser.UpdatedAt.Time = *user.UpdatedAt
-		repoUser.UpdatedAt.Valid = true
-	}
-
-	return &repoUser
 }
 
 // ToRepoUpdateFromUserService converts user from service model to repository model.

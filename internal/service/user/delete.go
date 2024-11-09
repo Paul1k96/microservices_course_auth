@@ -12,5 +12,7 @@ func (s *service) Delete(ctx context.Context, id int64) error {
 		return fmt.Errorf("delete user: %w", err)
 	}
 
+	_ = s.cache.Delete(ctx, id)
+
 	return nil
 }
