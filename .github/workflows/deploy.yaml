@@ -13,6 +13,7 @@ env:
   CONTAINER_NAME_MIGRATION: "auth-migration"
   CONTAINER_NAME_DB: "auth-db"
   IMAGE_POSTGRES: "postgres:14-alpine"
+  IMAGE_REDIS: "redis:7.2.5-alpine"
   MIGRATION_DIR: "./migrations"
 
 jobs:
@@ -139,6 +140,14 @@ jobs:
             --network auth_internal_network \
             -t $REGISTRY/$IMAGE_POSTGRES
             
+            # Run redis, if not exists
+            docker run -d \
+            -p ${{ secrets.REDIS_PORT }}:6379 \
+            -v auth_redis:/data \
+            --name ${{ secrets.REDIS_HOST }} \
+            --network auth_internal_network \
+            -t $REGISTRY/$IMAGE_REDIS
+            
             # Stop running migration container
             docker stop $CONTAINER_NAME_MIGRATION
             
@@ -166,6 +175,12 @@ jobs:
             --env POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
             --env POSTGRES_HOST=$CONTAINER_NAME_DB \
             --env POSTGRES_PORT=5432 \
+            --env REDIS_HOST=$REDIS_HOST \
+            --env REDIS_PORT=6379 \
+            --env REDIS_CONN_TIMEOUT=$REDIS_CONN_TIMEOUT \
+            --env REDIS_IDLE_TIMEOUT=$REDIS_IDLE_TIMEOUT \
+            --env REDIS_MAX_IDLE=$REDIS_MAX_IDLE \
+            --env REDIS_USER_TTL=$REDIS_USER_TTL \
             --env GRPC_PORT=${{ secrets.GRPC_PORT }} \
             --network auth_internal_network \
             -t $REGISTRY/$IMAGE_NAME:$TAG_NAME

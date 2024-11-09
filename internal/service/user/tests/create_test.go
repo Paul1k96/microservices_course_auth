@@ -11,6 +11,7 @@ import (
 	"github.com/Paul1k96/microservices_course_auth/internal/service/user"
 	tm "github.com/Paul1k96/microservices_course_auth/internal/testmodel"
 	infraMocks "github.com/Paul1k96/microservices_course_platform_common/pkg/client/db/mocks"
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -196,7 +197,7 @@ func (t *CreateUserSuite) TestCreateUser_EmailInvalid() {
 		ctx:  context.Background(),
 		user: tm.NewUser(),
 	}
-	args.user.Email = "invalid_email.com"
+	args.user.Email = gofakeit.URL()
 
 	want := CreateUserWant{
 		id:  0,

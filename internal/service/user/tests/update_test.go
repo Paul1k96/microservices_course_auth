@@ -54,7 +54,6 @@ type UpdateUserArgs struct {
 }
 
 type UpdateUserWant struct {
-	id  int64
 	err error
 }
 
@@ -222,7 +221,7 @@ func (t *UpdateUserSuite) TestUpdateUser_EmailInvalid() {
 	usr := tm.NewUser()
 
 	changeUser := usr
-	changeUser.Email = "invalid_email.com"
+	changeUser.Email = gofakeit.URL()
 	args := UpdateUserArgs{
 		ctx:  context.Background(),
 		user: changeUser,
