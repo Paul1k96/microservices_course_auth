@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/errs"
@@ -10,7 +11,7 @@ import (
 	"github.com/Paul1k96/microservices_course_auth/internal/service"
 	"github.com/Paul1k96/microservices_course_auth/internal/service/user"
 	tm "github.com/Paul1k96/microservices_course_auth/internal/testmodel"
-	mocks2 "github.com/Paul1k96/microservices_course_platform_common/pkg/client/db/mocks"
+	infraMocks "github.com/Paul1k96/microservices_course_platform_common/pkg/client/db/transaction"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -39,7 +40,7 @@ func (t *GetUserSuite) SetupTest() {
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
 
-	t.service = user.NewService(t.userRepo, t.userCache, mocks2.NewMockTxManager(t.ctrl))
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
 }
 
 func (t *GetUserSuite) TearDownTest() {
@@ -120,17 +121,23 @@ func (t *GetUserSuite) TestGetUser_UserNotFound() {
 	t.do(args, want)
 }
 
-func (t *GetUserSuite) TestGetUser_FailedToGetFromCache() {
+func (t *GetUserSuite) TestGetUser_FailedToGetAndSetFromCache() {
+	usr := tm.NewUser()
+
 	args := GetUserArgs{
 		ctx: context.Background(),
 		id:  0,
 	}
 	want := GetUserWant{
-		user: nil,
-		err:  gofakeit.Error(),
+		user: usr,
+		err:  nil,
 	}
 
-	t.userCache.EXPECT().Get(args.ctx, args.id).Return(nil, want.err)
+	cacheErr := gofakeit.Error()
+	t.userCache.EXPECT().Get(args.ctx, args.id).Return(nil, cacheErr)
+	t.userRepo.EXPECT().GetByID(args.ctx, args.id).Return(usr, nil)
+
+	t.userCache.EXPECT().Set(args.ctx, usr).Return(cacheErr)
 
 	t.do(args, want)
 }

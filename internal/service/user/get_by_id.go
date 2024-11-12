@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/errs"
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
@@ -18,7 +19,7 @@ func (s *service) GetByID(ctx context.Context, id int64) (*model.User, error) {
 
 	user, err = s.cache.Get(ctx, id)
 	if err != nil && !errors.Is(err, errs.ErrUserNotFound) {
-		return nil, fmt.Errorf("failed to get user from cache: %w", err)
+		s.logger.Error("failed to get user from cache: %v", slog.String("error", err.Error()))
 	}
 
 	if user != nil {
@@ -34,7 +35,10 @@ func (s *service) GetByID(ctx context.Context, id int64) (*model.User, error) {
 		return nil, errs.ErrUserNotFound
 	}
 
-	_ = s.cache.Set(ctx, user)
+	err = s.cache.Set(ctx, user)
+	if err != nil {
+		s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
+	}
 
 	return user, nil
 }

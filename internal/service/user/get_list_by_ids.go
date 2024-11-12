@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
 	"golang.org/x/sync/errgroup"
@@ -59,7 +60,10 @@ func (s *service) GetListByIDs(ctx context.Context, ids []int64) ([]*model.User,
 		for _, user := range users {
 			user := user
 			errGroup.Go(func() error {
-				_ = s.cache.Set(errCtx, user)
+				err = s.cache.Set(errCtx, user)
+				if err != nil {
+					s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
+				}
 				return nil
 			})
 		}

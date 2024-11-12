@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"testing"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/Paul1k96/microservices_course_auth/internal/service"
 	"github.com/Paul1k96/microservices_course_auth/internal/service/user"
 	tm "github.com/Paul1k96/microservices_course_auth/internal/testmodel"
-	"github.com/Paul1k96/microservices_course_platform_common/pkg/client/db/transaction"
+	infraMocks "github.com/Paul1k96/microservices_course_platform_common/pkg/client/db/transaction"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -41,7 +42,7 @@ func (t *UpdateUserSuite) SetupTest() {
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
 
-	t.service = user.NewService(t.userRepo, t.userCache, transaction.NewNopTxManager())
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
 }
 
 func (t *UpdateUserSuite) TearDownTest() {

@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
@@ -26,7 +27,10 @@ func (s *service) Update(ctx context.Context, user *model.User) error {
 		return fmt.Errorf("transaction error: %w", txErr)
 	}
 
-	_ = s.cache.Set(ctx, user)
+	err := s.cache.Set(ctx, user)
+	if err != nil {
+		s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
+	}
 
 	return nil
 }

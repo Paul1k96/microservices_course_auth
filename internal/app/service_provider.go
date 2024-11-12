@@ -201,7 +201,7 @@ func (s *serviceProvider) UsersService(ctx context.Context) (service.UserService
 		if err != nil {
 			return nil, fmt.Errorf("failed to get users cache: %w", err)
 		}
-		s.usersService = userSvc.NewService(userRepository, userCache, txManager)
+		s.usersService = userSvc.NewService(s.logger, txManager, userRepository, userCache)
 	}
 
 	return s.usersService, nil

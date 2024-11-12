@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/mail"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
@@ -20,7 +21,10 @@ func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
 	}
 
 	user.ID = id
-	_ = s.cache.Set(ctx, user)
+	err = s.cache.Set(ctx, user)
+	if err != nil {
+		s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
+	}
 
 	return id, nil
 }
