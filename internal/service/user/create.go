@@ -3,10 +3,10 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/mail"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
-	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/mapper"
 )
 
 // Create creates a new user.
@@ -15,9 +15,15 @@ func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
 		return 0, fmt.Errorf("create user: %w", err)
 	}
 
-	id, err := s.repo.Create(ctx, mapper.ToRepoCreateFromUserService(user))
+	id, err := s.repo.Create(ctx, user)
 	if err != nil {
 		return 0, fmt.Errorf("create user: %w", err)
+	}
+
+	user.ID = id
+	err = s.cache.Set(ctx, user)
+	if err != nil {
+		s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
 	}
 
 	return id, nil

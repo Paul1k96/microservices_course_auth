@@ -9,6 +9,8 @@ install-deps:
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
 	GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.22.1
+	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@v0.5.0
+	GOBIN=$(LOCAL_BIN) go install github.com/dmarkham/enumer@v1.5.9
 
 get-deps:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go
@@ -30,6 +32,12 @@ go/lint:
 
 go/test:
 	go test -v ./...
+
+go/test-cover:
+	go test -coverprofile=coverage.out ./...
+
+go/show-cover:
+	go tool cover -html=coverage.out
 
 local-migration-status:
 	${LOCAL_BIN}/goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} status -v

@@ -2,6 +2,7 @@ version: '3'
 
 volumes:
   postgres_volume:
+  redis-data:
 
 services:
   auth_svc:
@@ -15,7 +16,9 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_HOST: auth_db
     ports:
-      - "50051:50051"
+      - "50050:50051"
+    networks:
+      - cluster
 
   auth_db:
     image: postgres:14-alpine
@@ -24,7 +27,19 @@ services:
     env_file:
       - local.env
     ports:
-      - "6432:5432"
+      - "6430:5432"
+    networks:
+      - auth_db
+      - cluster
+
+  auth_cache:
+    image: redis:7.2.5-alpine
+    ports:
+      - "6370:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - cluster
 
   migrator:
     build:
@@ -35,4 +50,10 @@ services:
       - local.env
     environment:
       DB_HOST: auth_db
+    networks:
+      - auth_db
 
+networks:
+  auth_db:
+  cluster:
+    external: true

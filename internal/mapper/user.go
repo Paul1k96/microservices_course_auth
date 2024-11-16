@@ -40,6 +40,19 @@ func ToGetResponseFromUserService(user *model.User) *desc.GetResponse {
 	return resp
 }
 
+// ToGetListResponseFromUserService converts user models to api response.
+func ToGetListResponseFromUserService(users []*model.User) *desc.GetListResponse {
+	resp := &desc.GetListResponse{
+		Users: make([]*desc.GetResponse, 0, len(users)),
+	}
+
+	for _, user := range users {
+		resp.Users = append(resp.Users, ToGetResponseFromUserService(user))
+	}
+
+	return resp
+}
+
 // ToUserFromUpdateRequest converts api request to user model.
 func ToUserFromUpdateRequest(request *desc.UpdateRequest) *model.User {
 	user := &model.User{

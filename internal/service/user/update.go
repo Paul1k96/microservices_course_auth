@@ -3,10 +3,10 @@ package user
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
-	"github.com/Paul1k96/microservices_course_auth/internal/repository/user/mapper"
 )
 
 // Update updates user.
@@ -18,13 +18,18 @@ func (s *service) Update(ctx context.Context, user *model.User) error {
 
 		updateTime := time.Now()
 		user.UpdatedAt = &updateTime
-		if err := s.repo.Update(ctx, mapper.ToRepoUpdateFromUserService(user)); err != nil {
+		if err := s.repo.Update(ctx, user); err != nil {
 			return fmt.Errorf("failed to update user: %w", err)
 		}
 
 		return nil
 	}); txErr != nil {
 		return fmt.Errorf("transaction error: %w", txErr)
+	}
+
+	err := s.cache.Set(ctx, user)
+	if err != nil {
+		s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
 	}
 
 	return nil
