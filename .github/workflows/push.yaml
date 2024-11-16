@@ -78,6 +78,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          token: "${{ secrets.TOKEN }}"
       - name: Create bump and changelog
         uses: commitizen-tools/commitizen-action@master
         with:
