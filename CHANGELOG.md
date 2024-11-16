@@ -1,3 +1,9 @@
+## v0.1.1 (2024-11-16)
+
+### Fix
+
+- **cicd**: try fix bump and deploy
+
 ## v0.1.0 (2024-11-16)
 
 ### Feat
