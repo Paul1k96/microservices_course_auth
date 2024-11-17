@@ -1,4 +1,4 @@
-package user_v1
+package v1
 
 import (
 	"log/slog"

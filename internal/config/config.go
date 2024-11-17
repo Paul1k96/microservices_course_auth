@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"time"
+
+	"github.com/IBM/sarama"
+)
 
 // PGConfig represents configuration for PostgreSQL.
 type PGConfig interface {
@@ -19,4 +23,19 @@ type RedisConfig interface {
 	GetMaxIdle() int
 	GetIdleTimeout() time.Duration
 	GetUserTTL() time.Duration
+}
+
+// KafkaConsumerConfig represents configuration for Kafka consumer.
+type KafkaConsumerConfig interface {
+	Brokers() []string
+	GroupID() string
+	Config() *sarama.Config
+	Topic() string
+}
+
+// KafkaProducerConfig represents configuration for Kafka producer.
+type KafkaProducerConfig interface {
+	Brokers() []string
+	Topic() string
+	Config() *sarama.Config
 }

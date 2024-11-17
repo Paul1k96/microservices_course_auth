@@ -31,6 +31,7 @@ type UpdateUserSuite struct {
 
 	userRepo  *mocks.MockUsersRepository
 	userCache *mocks.MockUsersCache
+	eventRepo *mocks.MockUserEventsRepository
 
 	service service.UserService
 }
@@ -41,8 +42,9 @@ func (t *UpdateUserSuite) SetupTest() {
 
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
+	t.eventRepo = mocks.NewMockUserEventsRepository(t.ctrl)
 
-	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.eventRepo, t.userCache)
 }
 
 func (t *UpdateUserSuite) TearDownTest() {
@@ -83,9 +85,13 @@ func (t *UpdateUserSuite) TestUpdateUser_OkChangeName() {
 		err: nil,
 	}
 
+	t.userRepo.EXPECT().GetByID(args.ctx, args.user.ID).Return(usr, nil)
+
 	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(want.err)
 
 	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
+
+	t.eventRepo.EXPECT().Save(args.ctx, gomock.Any()).Return(nil)
 
 	t.do(args, want)
 }
@@ -105,9 +111,13 @@ func (t *UpdateUserSuite) TestUpdateUser_OkEmptyName() {
 		err: nil,
 	}
 
+	t.userRepo.EXPECT().GetByID(args.ctx, args.user.ID).Return(usr, nil)
+
 	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(want.err)
 
 	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
+
+	t.eventRepo.EXPECT().Save(args.ctx, gomock.Any()).Return(nil)
 
 	t.do(args, want)
 }
@@ -177,9 +187,13 @@ func (t *UpdateUserSuite) TestUpdateUser_OkEmailIsEmpty() {
 		err: nil,
 	}
 
+	t.userRepo.EXPECT().GetByID(args.ctx, args.user.ID).Return(usr, nil)
+
 	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(nil)
 
 	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
+
+	t.eventRepo.EXPECT().Save(args.ctx, gomock.Any()).Return(nil)
 
 	t.do(args, want)
 }
@@ -264,6 +278,8 @@ func (t *UpdateUserSuite) TestUpdateUser_RepoError() {
 	want := UpdateUserWant{
 		err: errs.ErrUserNotFound,
 	}
+
+	t.userRepo.EXPECT().GetByID(args.ctx, args.user.ID).Return(nil, nil)
 
 	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(want.err)
 

@@ -24,8 +24,9 @@ type DeleteUserSuite struct {
 	*require.Assertions
 	ctrl *gomock.Controller
 
-	userRepo  *mocks.MockUsersRepository
-	userCache *mocks.MockUsersCache
+	userRepo   *mocks.MockUsersRepository
+	userCache  *mocks.MockUsersCache
+	userEvents *mocks.MockUserEventsRepository
 
 	service service.UserService
 }
@@ -36,8 +37,9 @@ func (t *DeleteUserSuite) SetupTest() {
 
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
+	t.userEvents = mocks.NewMockUserEventsRepository(t.ctrl)
 
-	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userEvents, t.userCache)
 }
 
 func (t *DeleteUserSuite) TearDownTest() {
@@ -71,8 +73,12 @@ func (t *DeleteUserSuite) TestDeleteUser_Ok() {
 
 	want := DeleteUserWant{}
 
+	t.userRepo.EXPECT().GetByID(args.ctx, args.id).Return(nil, nil)
+
 	t.userRepo.EXPECT().Delete(args.ctx, args.id).Return(nil)
 	t.userCache.EXPECT().Delete(args.ctx, args.id).Return(nil)
+
+	t.userEvents.EXPECT().Save(args.ctx, gomock.Any()).Return(nil)
 
 	t.do(args, want)
 }
@@ -86,6 +92,8 @@ func (t *DeleteUserSuite) TestDeleteUser_RepoError() {
 	want := DeleteUserWant{
 		err: gofakeit.Error(),
 	}
+
+	t.userRepo.EXPECT().GetByID(args.ctx, args.id).Return(nil, nil)
 
 	t.userRepo.EXPECT().Delete(args.ctx, args.id).Return(want.err)
 

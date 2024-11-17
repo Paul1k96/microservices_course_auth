@@ -18,7 +18,7 @@ func main() {
 		return
 	}
 
-	err = a.Run()
+	err = a.Run(ctx)
 	if err != nil {
 		logger.Error("failed to run app", slog.String("error", err.Error()))
 		return

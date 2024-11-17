@@ -23,3 +23,8 @@ type UsersCache interface {
 	Get(ctx context.Context, id int64) (*model.User, error)
 	Delete(ctx context.Context, id int64) error
 }
+
+// UserEventsRepository represents user events repository.
+type UserEventsRepository interface {
+	Save(ctx context.Context, event *model.UserEvent) error
+}

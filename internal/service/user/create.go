@@ -26,6 +26,11 @@ func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
 		s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
 	}
 
+	err = s.events.Save(ctx, model.NewCreateUserEvent(id, user))
+	if err != nil {
+		s.logger.Error("failed to save user event:", slog.String("error", err.Error()))
+	}
+
 	return id, nil
 }
 

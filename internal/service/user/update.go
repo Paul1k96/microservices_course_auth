@@ -16,10 +16,20 @@ func (s *service) Update(ctx context.Context, user *model.User) error {
 			return fmt.Errorf("failed to validate user: %w", err)
 		}
 
+		_, err := s.repo.GetByID(ctx, user.ID)
+		if err != nil {
+			return fmt.Errorf("failed to get user by id: %w", err)
+		}
+
 		updateTime := time.Now()
 		user.UpdatedAt = &updateTime
 		if err := s.repo.Update(ctx, user); err != nil {
 			return fmt.Errorf("failed to update user: %w", err)
+		}
+
+		err = s.events.Save(ctx, model.NewUpdateUserEvent(user.ID, user))
+		if err != nil {
+			s.logger.Error("failed to save user event:", slog.String("error", err.Error()))
 		}
 
 		return nil

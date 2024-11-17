@@ -3,11 +3,16 @@ package app
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/Paul1k96/microservices_course_auth/pkg/proto/gen/user_v1"
 	"github.com/Paul1k96/microservices_course_platform_common/pkg/closer"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -35,13 +40,59 @@ func NewApp(ctx context.Context, logger *slog.Logger) (*App, error) {
 }
 
 // Run runs the application.
-func (a *App) Run() error {
+func (a *App) Run(ctx context.Context) error {
 	defer func() {
 		closer.CloseAll()
 		closer.Wait()
 	}()
 
-	return a.runGRPCServer()
+	ctx, cancel := context.WithCancel(ctx)
+
+	errGroup, ctx := errgroup.WithContext(ctx)
+
+	errGroup.Go(func() error {
+		select {
+		case <-ctx.Done():
+			a.logger.Info("terminating: context cancelled")
+		case <-waitForSignal():
+			a.logger.Info("terminating: via signal")
+		}
+
+		cancel()
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		userCreateConsumer, err := a.serviceProvider.UserCreateConsumer(ctx)
+		if err != nil {
+			a.logger.Error("failed to get user create consumer", slog.String("error", err.Error()))
+			return fmt.Errorf("failed to get user create consumer: %w", err)
+		}
+
+		err = userCreateConsumer.RunConsumer(ctx)
+		if err != nil {
+			a.logger.Error("failed to run user create consumer", slog.String("error", err.Error()))
+			return fmt.Errorf("failed to run user create consumer: %w", err)
+		}
+
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		err := a.runGRPCServer(ctx)
+		if err != nil {
+			log.Printf("failed to run grpc server: %s", err.Error())
+			return fmt.Errorf("failed to run grpc server: %w", err)
+		}
+
+		return nil
+	})
+
+	if err := errGroup.Wait(); err != nil {
+		return fmt.Errorf("failed to run app: %w", err)
+	}
+
+	return nil
 }
 
 func (a *App) initDeps(ctx context.Context) error {
@@ -79,17 +130,38 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) runGRPCServer() error {
+func (a *App) runGRPCServer(ctx context.Context) error {
 	a.logger.Info("GRPC server is running on", slog.Any("addr", a.serviceProvider.GRPCConfig().GetAddress()))
 
-	lis, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().GetAddress())
-	if err != nil {
-		return fmt.Errorf("failed to listen: %w", err)
+	errChan := make(chan error, 1)
+	go func() {
+		lis, err := net.Listen("tcp", a.serviceProvider.GRPCConfig().GetAddress())
+		if err != nil {
+			errChan <- fmt.Errorf("failed to listen: %w", err)
+			return
+		}
+
+		if err = a.grpcServer.Serve(lis); err != nil {
+			errChan <- fmt.Errorf("failed to serve: %w", err)
+			return
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		a.logger.Info("GRPC server is stopping")
+	case err := <-errChan:
+		return fmt.Errorf("failed to run grpc server: %w", err)
 	}
 
-	if err = a.grpcServer.Serve(lis); err != nil {
-		return fmt.Errorf("failed to serve: %w", err)
-	}
+	a.grpcServer.GracefulStop()
 
 	return nil
+}
+
+func waitForSignal() chan os.Signal {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	return sigCh
 }

@@ -180,3 +180,41 @@ func (mr *MockUsersCacheMockRecorder) Set(ctx, user any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockUsersCache)(nil).Set), ctx, user)
 }
+
+// MockUserEventsRepository is a mock of UserEventsRepository interface.
+type MockUserEventsRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockUserEventsRepositoryMockRecorder
+	isgomock struct{}
+}
+
+// MockUserEventsRepositoryMockRecorder is the mock recorder for MockUserEventsRepository.
+type MockUserEventsRepositoryMockRecorder struct {
+	mock *MockUserEventsRepository
+}
+
+// NewMockUserEventsRepository creates a new mock instance.
+func NewMockUserEventsRepository(ctrl *gomock.Controller) *MockUserEventsRepository {
+	mock := &MockUserEventsRepository{ctrl: ctrl}
+	mock.recorder = &MockUserEventsRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUserEventsRepository) EXPECT() *MockUserEventsRepositoryMockRecorder {
+	return m.recorder
+}
+
+// Save mocks base method.
+func (m *MockUserEventsRepository) Save(ctx context.Context, event *model.UserEvent) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Save", ctx, event)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Save indicates an expected call of Save.
+func (mr *MockUserEventsRepositoryMockRecorder) Save(ctx, event any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockUserEventsRepository)(nil).Save), ctx, event)
+}

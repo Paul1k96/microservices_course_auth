@@ -28,8 +28,9 @@ type CreateUserSuite struct {
 	*require.Assertions
 	ctrl *gomock.Controller
 
-	userRepo  *mocks.MockUsersRepository
-	userCache *mocks.MockUsersCache
+	userRepo   *mocks.MockUsersRepository
+	userCache  *mocks.MockUsersCache
+	userEvents *mocks.MockUserEventsRepository
 
 	service service.UserService
 }
@@ -40,8 +41,9 @@ func (t *CreateUserSuite) SetupTest() {
 
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
+	t.userEvents = mocks.NewMockUserEventsRepository(t.ctrl)
 
-	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userEvents, t.userCache)
 }
 
 func (t *CreateUserSuite) TearDownTest() {
@@ -82,8 +84,11 @@ func (t *CreateUserSuite) TestCreateUser_Ok() {
 	}
 
 	t.userRepo.EXPECT().Create(args.ctx, args.user).Return(want.id, want.err)
+	args.user.ID = want.id
 
 	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
+
+	t.userEvents.EXPECT().Save(args.ctx, gomock.Any())
 
 	t.do(args, want)
 }

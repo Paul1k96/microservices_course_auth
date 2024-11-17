@@ -18,6 +18,7 @@ services:
     ports:
       - "50050:50051"
     networks:
+      - auth_nw
       - cluster
 
   auth_db:
@@ -29,7 +30,7 @@ services:
     ports:
       - "6430:5432"
     networks:
-      - auth_db
+      - auth_nw
       - cluster
 
   auth_cache:
@@ -39,6 +40,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
+      - auth_nw
       - cluster
 
   migrator:
@@ -51,9 +53,9 @@ services:
     environment:
       DB_HOST: auth_db
     networks:
-      - auth_db
+      - auth_nw
 
 networks:
-  auth_db:
+  auth_nw:
   cluster:
     external: true
