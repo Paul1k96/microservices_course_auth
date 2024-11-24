@@ -15,6 +15,8 @@ require (
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
+	github.com/rakyll/statik v0.1.7
+	github.com/rs/cors v1.11.1
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.5.0
 	golang.org/x/sync v0.9.0

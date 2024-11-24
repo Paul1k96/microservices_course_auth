@@ -35,6 +35,7 @@ type serviceProvider struct {
 	grpcConfig                    config.GRPCConfig
 	httpConfig                    config.HTTPConfig
 	redisConfig                   config.RedisConfig
+	swaggerConfig                 config.HTTPConfig
 	kafkaCreateUserConsumerConfig config.KafkaConsumerConfig
 	kafkaUserEventsProducerConfig config.KafkaProducerConfig
 	logger                        *slog.Logger
@@ -92,6 +93,20 @@ func (s *serviceProvider) HTTPConfig() (config.HTTPConfig, error) {
 	}
 
 	return s.httpConfig, nil
+}
+
+// SwaggerConfig returns an instance of config.SwaggerConfig.
+func (s *serviceProvider) SwaggerConfig() (config.HTTPConfig, error) {
+	if s.swaggerConfig == nil {
+		cfg, err := env.NewSwaggerConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get swagger config: %w", err)
+		}
+
+		s.swaggerConfig = cfg
+	}
+
+	return s.swaggerConfig, nil
 }
 
 // RedisConfig returns an instance of config.RedisConfig.

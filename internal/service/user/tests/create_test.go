@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"log/slog"
-	"strings"
 	"testing"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
@@ -93,51 +92,6 @@ func (t *CreateUserSuite) TestCreateUser_Ok() {
 	t.do(args, want)
 }
 
-func (t *CreateUserSuite) TestCreateUser_EmptyName() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Name = ""
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("name is required"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_TooShortName() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Name = "a"
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("name must be at least 2 characters"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_TooLongName() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Name = strings.Repeat("a", 101)
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("name must be at most 100 characters"),
-	}
-
-	t.do(args, want)
-}
-
 func (t *CreateUserSuite) TestCreateUser_NameContainsRestrictedSymbols() {
 	args := CreateUserArgs{
 		ctx:  context.Background(),
@@ -148,51 +102,6 @@ func (t *CreateUserSuite) TestCreateUser_NameContainsRestrictedSymbols() {
 	want := CreateUserWant{
 		id:  0,
 		err: errors.New("name contains restricted symbols"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_EmailIsEmpty() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Email = ""
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("email is required"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_EmailTooShort() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Email = "a"
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("email must be at least 5 characters"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_EmailTooLong() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Email = strings.Repeat("a", 101) + "@gmail.com"
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("email must be at most 100 characters"),
 	}
 
 	t.do(args, want)

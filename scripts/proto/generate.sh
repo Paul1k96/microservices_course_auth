@@ -16,5 +16,7 @@ for dir in $(find "${DIR}/api/proto" -name '*.proto' -print0 | xargs -0 -n1 dirn
         --plugin=protoc-gen-validate=bin/protoc-gen-validate \
         --grpc-gateway_out=paths=source_relative:"${DIR}/pkg/proto/gen" \
         --plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
+        --openapiv2_out=allow_merge=true,merge_file_name=api:"${DIR}/api/swagger" \
+        --plugin=protoc-gen-openapiv2=bin/protoc-gen-openapiv2 \
         ${files}
 done

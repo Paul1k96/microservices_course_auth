@@ -17,6 +17,7 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_HOST: auth_db
     ports:
+      - "8090:8090"
       - "8080:8080"
       - "50050:50051"
     networks:
