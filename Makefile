@@ -8,9 +8,16 @@ LOCAL_MIGRATION_DSN="host=localhost port=$(PG_PORT) dbname=$(PG_DATABASE_NAME) u
 install-deps:
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
 	GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.20.0
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.22.1
 	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@v0.5.0
 	GOBIN=$(LOCAL_BIN) go install github.com/dmarkham/enumer@v1.5.9
+	@if [ ! -d bin/protogen/google ]; then \
+		git clone https://github.com/googleapis/googleapis bin/protogen/googleapis &&\
+		mkdir -p  bin/protogen/google/ &&\
+		mv bin/protogen/googleapis/google/api bin/protogen/google &&\
+		rm -rf bin/protogen/googleapis ;\
+	fi
 
 get-deps:
 	go get -u google.golang.org/protobuf/cmd/protoc-gen-go

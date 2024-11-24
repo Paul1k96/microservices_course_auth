@@ -5,15 +5,41 @@ package user_v1;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/Paul1k96/microservices_course_auth/pkg/user_v1;user_v1";
 
 service User {
-    rpc Create(CreateRequest) returns (CreateResponse);
-    rpc Get(GetRequest) returns (GetResponse);
-    rpc List(GetListRequest) returns (GetListResponse);
-    rpc Update(UpdateRequest) returns (UpdateResponse);
-    rpc Delete(DeleteRequest) returns (DeleteResponse);
+    rpc Create(CreateRequest) returns (CreateResponse){
+        option (google.api.http) = {
+            post: "/user/v1/create"
+            body: "*"
+        };
+    }
+
+    rpc Get(GetRequest) returns (GetResponse){
+        option (google.api.http) = {
+            get: "/user/v1"
+        };
+    }
+
+    rpc List(GetListRequest) returns (GetListResponse){
+        option (google.api.http) = {
+            get: "/user/v1/list"
+        };
+    }
+
+    rpc Update(UpdateRequest) returns (UpdateResponse){
+        option (google.api.http) = {
+            patch: "/user/v1"
+            body: "*"
+        };
+    }
+    rpc Delete(DeleteRequest) returns (DeleteResponse){
+        option (google.api.http) = {
+            delete: "/user/v1"
+        };
+    }
 }
 
 message CreateRequest {

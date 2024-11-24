@@ -23,8 +23,14 @@ func ToUserEventFromKafka(event *modelKafka.UserEvent) (*model.UserEvent, error)
 	switch event.Type {
 	case model.UserEventTypeCreateUser:
 		value, err = ToCreateUserEventValueFromKafka(event.Data)
+		if err != nil {
+			return nil, err
+		}
 	case model.UserEventTypeUpdateUser:
 		value, err = ToUpdateUserEventValueFromKafka(event.Data)
+		if err != nil {
+			return nil, err
+		}
 	case model.UserEventTypeDeleteUser:
 		value = ToDeleteUserEventValueFromKafka(event.Data)
 	default:

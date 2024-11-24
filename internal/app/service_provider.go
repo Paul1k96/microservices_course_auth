@@ -33,6 +33,7 @@ import (
 type serviceProvider struct {
 	pgConfig                      config.PGConfig
 	grpcConfig                    config.GRPCConfig
+	httpConfig                    config.HTTPConfig
 	redisConfig                   config.RedisConfig
 	kafkaCreateUserConsumerConfig config.KafkaConsumerConfig
 	kafkaUserEventsProducerConfig config.KafkaProducerConfig
@@ -77,6 +78,20 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	}
 
 	return s.grpcConfig
+}
+
+// HTTPConfig returns an instance of config.HTTPConfig.
+func (s *serviceProvider) HTTPConfig() (config.HTTPConfig, error) {
+	if s.httpConfig == nil {
+		cfg, err := env.NewHTTPConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get http config: %w", err)
+		}
+
+		s.httpConfig = cfg
+	}
+
+	return s.httpConfig, nil
 }
 
 // RedisConfig returns an instance of config.RedisConfig.

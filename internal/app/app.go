@@ -2,16 +2,19 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/Paul1k96/microservices_course_auth/pkg/proto/gen/user_v1"
 	"github.com/Paul1k96/microservices_course_platform_common/pkg/closer"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -22,6 +25,7 @@ import (
 type App struct {
 	serviceProvider *serviceProvider
 	grpcServer      *grpc.Server
+	httpServer      *http.Server
 	logger          *slog.Logger
 }
 
@@ -40,6 +44,7 @@ func NewApp(ctx context.Context, logger *slog.Logger) (*App, error) {
 }
 
 // Run runs the application.
+// nolint: funlen // this is the main function of the app
 func (a *App) Run(ctx context.Context) error {
 	defer func() {
 		closer.CloseAll()
@@ -88,6 +93,16 @@ func (a *App) Run(ctx context.Context) error {
 		return nil
 	})
 
+	errGroup.Go(func() error {
+		err := a.runHTTPServer(ctx)
+		if err != nil {
+			log.Printf("failed to run http server: %s", err.Error())
+			return fmt.Errorf("failed to run http server: %w", err)
+		}
+
+		return nil
+	})
+
 	if err := errGroup.Wait(); err != nil {
 		return fmt.Errorf("failed to run app: %w", err)
 	}
@@ -99,6 +114,7 @@ func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initServiceProvider,
 		a.initGRPCServer,
+		a.initHTTPServer,
 	}
 
 	for _, f := range inits {
@@ -130,6 +146,32 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initHTTPServer(ctx context.Context) error {
+	mux := runtime.NewServeMux()
+
+	grpcOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	err := user_v1.RegisterUserHandlerFromEndpoint(ctx, mux, a.serviceProvider.GRPCConfig().GetAddress(), grpcOpts)
+	if err != nil {
+		return fmt.Errorf("failed to register user handler from endpoint: %w", err)
+	}
+
+	httpConfig, err := a.serviceProvider.HTTPConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http config: %w", err)
+	}
+
+	a.httpServer = &http.Server{
+		Addr:              httpConfig.GetAddress(),
+		ReadHeaderTimeout: httpConfig.GetReadHeaderTimeout(),
+		Handler:           mux,
+	}
+
+	return nil
+}
+
 func (a *App) runGRPCServer(ctx context.Context) error {
 	a.logger.Info("GRPC server is running on", slog.Any("addr", a.serviceProvider.GRPCConfig().GetAddress()))
 
@@ -155,6 +197,40 @@ func (a *App) runGRPCServer(ctx context.Context) error {
 	}
 
 	a.grpcServer.GracefulStop()
+
+	return nil
+}
+
+func (a *App) runHTTPServer(ctx context.Context) error {
+	config, err := a.serviceProvider.HTTPConfig()
+	if err != nil {
+		return fmt.Errorf("failed to get http config: %w", err)
+	}
+
+	a.logger.Info("HTTP server is running on", slog.Any("addr", config.GetAddress()))
+
+	errChan := make(chan error, 1)
+	go func() {
+		if err = a.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errChan <- fmt.Errorf("failed to listen and serve: %w", err)
+			return
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		a.logger.Info("HTTP server is stopping")
+	case err = <-errChan:
+		return fmt.Errorf("failed to run http server: %w", err)
+	}
+
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), config.GetGracefulShutdownTimeout())
+	defer cancel()
+
+	err = a.httpServer.Shutdown(ctxShutdown)
+	if err != nil {
+		return fmt.Errorf("failed to shutdown http server: %w", err)
+	}
 
 	return nil
 }

@@ -16,6 +16,13 @@ type GRPCConfig interface {
 	GetAddress() string
 }
 
+// HTTPConfig represents configuration for HTTP.
+type HTTPConfig interface {
+	GetAddress() string
+	GetReadHeaderTimeout() time.Duration
+	GetGracefulShutdownTimeout() time.Duration
+}
+
 // RedisConfig represents configuration for Redis.
 type RedisConfig interface {
 	GetAddress() string

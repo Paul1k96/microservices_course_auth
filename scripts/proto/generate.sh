@@ -7,10 +7,12 @@ DIR="$(pwd)"
 for dir in $(find "${DIR}/api/proto" -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq); do
     files=$(find "${dir}" -name '*.proto')
 
-    protoc -I="${DIR}/api/proto" \
+    protoc -I="${DIR}/api/proto" --proto_path bin/protogen \
         --go_out=paths=source_relative:"${DIR}/pkg/proto/gen" \
         --plugin=protoc-gen-go=bin/protoc-gen-go \
         --go-grpc_out=paths=source_relative:"${DIR}/pkg/proto/gen" \
         --plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+        --grpc-gateway_out=paths=source_relative:"${DIR}/pkg/proto/gen" \
+        --plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
         ${files}
 done

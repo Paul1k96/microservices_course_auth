@@ -61,6 +61,7 @@ func NewKafkaUserEventProducerConfig() (*KafkaUserEventProducerConfig, error) {
 	if len(returnSuccessesStr) == 0 {
 		return nil, errors.New("kafka return successes not found")
 	}
+
 	returnSuccesses, err := strconv.ParseBool(returnSuccessesStr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse return successes")

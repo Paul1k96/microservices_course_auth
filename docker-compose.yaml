@@ -9,6 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    hostname: auth_svc
     restart: always
     env_file:
       - local.env
@@ -16,6 +17,7 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_HOST: auth_db
     ports:
+      - "8080:8080"
       - "50050:50051"
     networks:
       - auth_nw
