@@ -7,6 +7,7 @@ require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/Paul1k96/microservices_course_platform_common v0.5.0
 	github.com/brianvoe/gofakeit/v7 v7.1.2
+	github.com/envoyproxy/protoc-gen-validate v1.1.0
 	github.com/gomodule/redigo v1.9.2
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.24.0

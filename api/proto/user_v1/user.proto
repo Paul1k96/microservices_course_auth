@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 import "google/api/annotations.proto";
+import "validate/validate.proto";
 
 option go_package = "github.com/Paul1k96/microservices_course_auth/pkg/user_v1;user_v1";
 
@@ -43,8 +44,8 @@ service User {
 }
 
 message CreateRequest {
-    string name = 1;
-    string email = 2;
+    string name = 1 [(validate.rules).string = {min_len: 2, max_len: 100}];
+    string email = 2 [(validate.rules).string = {min_len: 5, max_len: 100}];
     string password = 3;
     string password_confirm = 4;
     Role role = 5;
@@ -77,8 +78,8 @@ message GetListResponse {
 
 message UpdateRequest {
     int64 id = 1;
-    google.protobuf.StringValue name = 2;
-    google.protobuf.StringValue email = 3;
+    google.protobuf.StringValue name = 2 [(validate.rules).string = {min_len: 2, max_len: 100}];
+    google.protobuf.StringValue email = 3 [(validate.rules).string = {min_len: 5, max_len: 100}];
     Role role = 4;
 }
 

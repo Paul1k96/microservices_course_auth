@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Paul1k96/microservices_course_auth/internal/interceptor"
 	"github.com/Paul1k96/microservices_course_auth/pkg/proto/gen/user_v1"
 	"github.com/Paul1k96/microservices_course_platform_common/pkg/closer"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -133,7 +134,10 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+	)
 
 	userV1Impl, err := a.serviceProvider.UserV1Impl(ctx)
 	if err != nil {

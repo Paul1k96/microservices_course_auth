@@ -9,6 +9,7 @@ install-deps:
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0
 	GOBIN=$(LOCAL_BIN) go install -mod=mod google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v2.20.0
+	GOBIN=$(LOCAL_BIN) go install github.com/envoyproxy/protoc-gen-validate@v1.1.0
 	GOBIN=$(LOCAL_BIN) go install github.com/pressly/goose/v3/cmd/goose@v3.22.1
 	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@v0.5.0
 	GOBIN=$(LOCAL_BIN) go install github.com/dmarkham/enumer@v1.5.9
@@ -17,6 +18,12 @@ install-deps:
 		mkdir -p  bin/protogen/google/ &&\
 		mv bin/protogen/googleapis/google/api bin/protogen/google &&\
 		rm -rf bin/protogen/googleapis ;\
+	fi
+	@if [ ! -d bin/protogen/validate ]; then \
+		mkdir -p bin/protogen/validate &&\
+		git clone https://github.com/envoyproxy/protoc-gen-validate bin/protogen/protoc-gen-validate &&\
+		mv bin/protogen/protoc-gen-validate/validate/*.proto bin/protogen/validate &&\
+		rm -rf bin/protogen/protoc-gen-validate ;\
 	fi
 
 get-deps:
