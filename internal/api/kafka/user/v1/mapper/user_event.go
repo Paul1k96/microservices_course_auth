@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"encoding/json"
-	"time"
 
 	modelKafka "github.com/Paul1k96/microservices_course_auth/internal/api/kafka/user/v1/model"
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
@@ -32,12 +31,10 @@ func ToUserEventFromKafka(event *modelKafka.UserEvent) (*model.UserEvent, error)
 			return nil, err
 		}
 	case model.UserEventTypeDeleteUser:
-		value = ToDeleteUserEventValueFromKafka(event.Data)
+		value = &model.DeleteUserEventValue{}
 	default:
 		return nil, errors.New("invalid user event data")
 	}
-
-	createdAt := time.Unix(0, event.CreatedAt)
 
 	return &model.UserEvent{
 		ID:        eventID,
@@ -45,7 +42,7 @@ func ToUserEventFromKafka(event *modelKafka.UserEvent) (*model.UserEvent, error)
 		Type:      event.Type,
 		EntityID:  event.EntityID,
 		Value:     value,
-		CreatedAt: createdAt,
+		CreatedAt: event.CreatedAt,
 	}, nil
 }
 
@@ -85,11 +82,6 @@ func ToUpdateUserEventValueFromKafka(data json.RawMessage) (*model.UpdateUserEve
 			UpdatedAt: kafkaModel.User.UpdatedAt,
 		},
 	}, nil
-}
-
-// ToDeleteUserEventValueFromKafka creates delete user event value from kafka.
-func ToDeleteUserEventValueFromKafka(_ json.RawMessage) *model.DeleteUserEventValue {
-	return &model.DeleteUserEventValue{}
 }
 
 // ToRoleFromKafka creates role from kafka.

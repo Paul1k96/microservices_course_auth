@@ -1,4 +1,4 @@
-package v1
+package userv1
 
 import (
 	"context"
@@ -17,6 +17,8 @@ func (c *Consumer) SaveEventHandler(ctx context.Context, message *sarama.Consume
 	if err := json.Unmarshal(message.Value, &kafkaEvent); err != nil {
 		return fmt.Errorf("failed to unmarshal user: %w", err)
 	}
+
+	kafkaEvent.CreatedAt = message.Timestamp
 
 	event, err := mapper.ToUserEventFromKafka(&kafkaEvent)
 	if err != nil {

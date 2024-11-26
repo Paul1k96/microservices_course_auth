@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
 )
@@ -13,5 +14,5 @@ type UserEvent struct {
 	Type      model.UserEventType `json:"type"`
 	Data      json.RawMessage     `json:"data"`
 	EntityID  int64               `json:"entity_id"`
-	CreatedAt int64               `json:"created_at"`
+	CreatedAt time.Time           `json:"created_at"`
 }
