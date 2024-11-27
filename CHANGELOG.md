@@ -1,3 +1,15 @@
+## v0.2.0 (2024-11-27)
+
+### Feat
+
+- **user**: add proto validation
+- **user**: add http method from proto file
+- **user**: add kafka event producer
+
+### Refactor
+
+- **user**: cleanup && change package name
+
 ## v0.1.1 (2024-11-17)
 
 ### Fix
