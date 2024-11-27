@@ -1,3 +1,9 @@
+## v0.2.1 (2024-11-27)
+
+### Fix
+
+- **workflow**: remove multiple network when start container
+
 ## v0.2.0 (2024-11-27)
 
 ### Feat
