@@ -1,4 +1,4 @@
-package user_v1
+package userv1
 
 import (
 	"context"

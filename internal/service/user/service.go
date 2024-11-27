@@ -12,8 +12,9 @@ type service struct {
 	logger    *slog.Logger
 	txManager db.TxManager
 
-	repo  repository.UsersRepository
-	cache repository.UsersCache
+	repo   repository.UsersRepository
+	events repository.UserEventsRepository
+	cache  repository.UsersCache
 }
 
 // NewService creates a new service.
@@ -21,12 +22,14 @@ func NewService(
 	logger *slog.Logger,
 	txManager db.TxManager,
 	repo repository.UsersRepository,
+	events repository.UserEventsRepository,
 	cache repository.UsersCache,
 ) svc.UserService {
 	return &service{
 		logger:    logger,
 		txManager: txManager,
 		repo:      repo,
+		events:    events,
 		cache:     cache,
 	}
 }

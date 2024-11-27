@@ -29,6 +29,7 @@ type GetUserSuite struct {
 
 	userRepo  *mocks.MockUsersRepository
 	userCache *mocks.MockUsersCache
+	eventRepo *mocks.MockUserEventsRepository
 
 	service service.UserService
 }
@@ -39,8 +40,9 @@ func (t *GetUserSuite) SetupTest() {
 
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
+	t.eventRepo = mocks.NewMockUserEventsRepository(t.ctrl)
 
-	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.eventRepo, t.userCache)
 }
 
 func (t *GetUserSuite) TearDownTest() {

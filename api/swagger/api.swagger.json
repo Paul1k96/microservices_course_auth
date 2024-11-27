@@ -1,0 +1,352 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "User API",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Timofeev Pavel",
+      "email": "timofeev.pavel.art@gmail.com"
+    }
+  },
+  "tags": [
+    {
+      "name": "User"
+    }
+  ],
+  "host": "localhost:8080",
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/user/v1": {
+      "get": {
+        "summary": "Get user by id",
+        "operationId": "User_Get",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/user_v1GetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "User id",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      },
+      "delete": {
+        "summary": "Delete user by id",
+        "operationId": "User_Delete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/user_v1DeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "User id",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      },
+      "post": {
+        "summary": "Create user",
+        "operationId": "User_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/user_v1CreateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/user_v1CreateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      },
+      "patch": {
+        "summary": "Update user by id",
+        "operationId": "User_Update",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/user_v1UpdateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/user_v1UpdateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/user/v1/list": {
+      "get": {
+        "summary": "Get list of users by ids",
+        "operationId": "User_List",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/user_v1GetListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ids",
+            "description": "User ids",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "User"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "user_v1CreateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "User name"
+        },
+        "email": {
+          "type": "string",
+          "title": "User email"
+        },
+        "password": {
+          "type": "string",
+          "title": "User password"
+        },
+        "passwordConfirm": {
+          "type": "string",
+          "title": "User password confirmation"
+        },
+        "role": {
+          "$ref": "#/definitions/user_v1Role",
+          "title": "User role"
+        }
+      }
+    },
+    "user_v1CreateResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "User id"
+        }
+      }
+    },
+    "user_v1DeleteResponse": {
+      "type": "object",
+      "properties": {
+        "empty": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    "user_v1GetListResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/user_v1GetResponse"
+          },
+          "title": "List of users"
+        }
+      }
+    },
+    "user_v1GetResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "User id"
+        },
+        "name": {
+          "type": "string",
+          "title": "User name"
+        },
+        "email": {
+          "type": "string",
+          "title": "User email"
+        },
+        "role": {
+          "$ref": "#/definitions/user_v1Role",
+          "title": "User role"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "User created at"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "User updated at"
+        }
+      }
+    },
+    "user_v1Role": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "USER",
+        "ADMIN"
+      ],
+      "default": "UNKNOWN",
+      "title": "- UNKNOWN: Unknown role\n - USER: User role\n - ADMIN: Admin role"
+    },
+    "user_v1UpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64",
+          "title": "User id"
+        },
+        "name": {
+          "type": "string",
+          "title": "User name"
+        },
+        "email": {
+          "type": "string",
+          "title": "User email"
+        },
+        "role": {
+          "$ref": "#/definitions/user_v1Role",
+          "title": "User role"
+        }
+      }
+    },
+    "user_v1UpdateResponse": {
+      "type": "object",
+      "properties": {
+        "empty": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  }
+}

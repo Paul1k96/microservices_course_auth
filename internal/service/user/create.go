@@ -26,6 +26,11 @@ func (s *service) Create(ctx context.Context, user *model.User) (int64, error) {
 		s.logger.Error("failed to set user to cache:", slog.String("error", err.Error()))
 	}
 
+	err = s.events.Save(ctx, model.NewCreateUserEvent(id, user))
+	if err != nil {
+		s.logger.Error("failed to save user event:", slog.String("error", err.Error()))
+	}
+
 	return id, nil
 }
 
@@ -49,30 +54,9 @@ func (s *service) validateUser(user *model.User) error {
 }
 
 func (s *service) validateUserName(name string) error {
-	err := s.checkUserNameLength([]rune(name))
+	err := s.checkRestrictedSymbols(name)
 	if err != nil {
 		return fmt.Errorf("validate name: %w", err)
-	}
-
-	err = s.checkRestrictedSymbols(name)
-	if err != nil {
-		return fmt.Errorf("validate name: %w", err)
-	}
-
-	return nil
-}
-
-func (s *service) checkUserNameLength(name []rune) error {
-	if len(name) == 0 {
-		return fmt.Errorf("name is required")
-	}
-
-	if len(name) < 2 {
-		return fmt.Errorf("name must be at least 2 characters")
-	}
-
-	if len(name) > 100 {
-		return fmt.Errorf("name must be at most 100 characters")
 	}
 
 	return nil
@@ -93,30 +77,9 @@ func (s *service) checkRestrictedSymbols(name string) error {
 }
 
 func (s *service) validateUserEmail(email string) error {
-	err := s.checkUserEmailLength(email)
+	err := s.checkUserEmailFormat(email)
 	if err != nil {
 		return fmt.Errorf("validate email: %w", err)
-	}
-
-	err = s.checkUserEmailFormat(email)
-	if err != nil {
-		return fmt.Errorf("validate email: %w", err)
-	}
-
-	return nil
-}
-
-func (s *service) checkUserEmailLength(email string) error {
-	if len(email) == 0 {
-		return fmt.Errorf("email is required")
-	}
-
-	if len(email) < 5 {
-		return fmt.Errorf("email must be at least 5 characters")
-	}
-
-	if len(email) > 100 {
-		return fmt.Errorf("email must be at most 100 characters")
 	}
 
 	return nil

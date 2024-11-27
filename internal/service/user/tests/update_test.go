@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"log/slog"
-	"strings"
 	"testing"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/errs"
@@ -31,6 +30,7 @@ type UpdateUserSuite struct {
 
 	userRepo  *mocks.MockUsersRepository
 	userCache *mocks.MockUsersCache
+	eventRepo *mocks.MockUserEventsRepository
 
 	service service.UserService
 }
@@ -41,8 +41,9 @@ func (t *UpdateUserSuite) SetupTest() {
 
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
+	t.eventRepo = mocks.NewMockUserEventsRepository(t.ctrl)
 
-	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.eventRepo, t.userCache)
 }
 
 func (t *UpdateUserSuite) TearDownTest() {
@@ -83,65 +84,13 @@ func (t *UpdateUserSuite) TestUpdateUser_OkChangeName() {
 		err: nil,
 	}
 
-	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(want.err)
-
-	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
-
-	t.do(args, want)
-}
-
-func (t *UpdateUserSuite) TestUpdateUser_OkEmptyName() {
-	usr := tm.NewUser()
-
-	changeUser := usr
-	changeUser.Name = ""
-
-	args := UpdateUserArgs{
-		ctx:  context.Background(),
-		user: changeUser,
-	}
-
-	want := UpdateUserWant{
-		err: nil,
-	}
+	t.userRepo.EXPECT().GetByID(args.ctx, args.user.ID).Return(usr, nil)
 
 	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(want.err)
 
 	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
 
-	t.do(args, want)
-}
-
-func (t *UpdateUserSuite) TestUpdateUser_TooShortName() {
-	usr := tm.NewUser()
-
-	changeUser := usr
-	changeUser.Name = "a"
-	args := UpdateUserArgs{
-		ctx:  context.Background(),
-		user: changeUser,
-	}
-
-	want := UpdateUserWant{
-		err: errors.New("name must be at least 2 characters"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *UpdateUserSuite) TestUpdateUser_TooLongName() {
-	usr := tm.NewUser()
-
-	changeUser := usr
-	changeUser.Name = strings.Repeat("a", 101)
-	args := UpdateUserArgs{
-		ctx:  context.Background(),
-		user: changeUser,
-	}
-
-	want := UpdateUserWant{
-		err: errors.New("name must be at most 100 characters"),
-	}
+	t.eventRepo.EXPECT().Save(args.ctx, gomock.Any()).Return(nil)
 
 	t.do(args, want)
 }
@@ -158,61 +107,6 @@ func (t *UpdateUserSuite) TestUpdateUser_NameContainsRestrictedSymbols() {
 
 	want := UpdateUserWant{
 		err: errors.New("name contains restricted symbols"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *UpdateUserSuite) TestUpdateUser_OkEmailIsEmpty() {
-	usr := tm.NewUser()
-
-	changeUser := usr
-	changeUser.Email = ""
-	args := UpdateUserArgs{
-		ctx:  context.Background(),
-		user: changeUser,
-	}
-
-	want := UpdateUserWant{
-		err: nil,
-	}
-
-	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(nil)
-
-	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
-
-	t.do(args, want)
-}
-
-func (t *UpdateUserSuite) TestUpdateUser_EmailTooShort() {
-	usr := tm.NewUser()
-
-	changeUser := usr
-	changeUser.Email = "a"
-	args := UpdateUserArgs{
-		ctx:  context.Background(),
-		user: changeUser,
-	}
-
-	want := UpdateUserWant{
-		err: errors.New("email must be at least 5 characters"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *UpdateUserSuite) TestUpdateUser_EmailTooLong() {
-	usr := tm.NewUser()
-
-	changeUser := usr
-	changeUser.Email = strings.Repeat("a", 101) + "@gmail.com"
-	args := UpdateUserArgs{
-		ctx:  context.Background(),
-		user: changeUser,
-	}
-
-	want := UpdateUserWant{
-		err: errors.New("email must be at most 100 characters"),
 	}
 
 	t.do(args, want)
@@ -264,6 +158,8 @@ func (t *UpdateUserSuite) TestUpdateUser_RepoError() {
 	want := UpdateUserWant{
 		err: errs.ErrUserNotFound,
 	}
+
+	t.userRepo.EXPECT().GetByID(args.ctx, args.user.ID).Return(nil, nil)
 
 	t.userRepo.EXPECT().Update(args.ctx, args.user).Return(want.err)
 

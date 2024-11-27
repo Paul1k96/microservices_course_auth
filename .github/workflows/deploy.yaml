@@ -169,7 +169,10 @@ jobs:
             docker rm $CONTAINER_NAME
             
             # Run a new container from a new image
-            docker run -d -p ${{ secrets.GRPC_PORT }}:50051 --name $CONTAINER_NAME \
+            docker run -d \
+            -p ${{ secrets.GRPC_PORT }}:50051 \
+            -p ${{ secrets.HTTP_PORT }}:8080 --name $CONTAINER_NAME \
+            -p ${{ secrets.SWAGGER_PORT }}:8090 \
             --env POSTGRES_USER=${{ secrets.POSTGRES_USER }} \
             --env POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} \
             --env POSTGRES_DB=${{ secrets.POSTGRES_DB }} \
@@ -181,8 +184,22 @@ jobs:
             --env REDIS_IDLE_TIMEOUT=${{ vars.REDIS_IDLE_TIMEOUT }} \
             --env REDIS_MAX_IDLE=${{ vars.REDIS_MAX_IDLE }} \
             --env REDIS_USER_TTL=${{ vars.REDIS_USER_TTL }} \
+            --env KAFKA_BROKERS=${{ secrets.KAFKA_BROKERS }} \
+            --env KAFKA_CONSUMER_USER_EVENTS_GROUP_ID=${{ secrets.KAFKA_CONSUMER_USER_EVENTS_GROUP_ID }} \
+            --env KAFKA_CONSUMER_USER_EVENTS_TOPIC=${{ secrets.KAFKA_CONSUMER_USER_EVENTS_TOPIC }} \
+            --env KAFKA_PRODUCER_USER_EVENTS_TOPIC=${{ secrets.KAFKA_PRODUCER_USER_EVENTS_TOPIC }} \
+            --env KAFKA_PRODUCER_USER_EVENTS_REQUIRED_ACKS=${{ secrets.KAFKA_PRODUCER_USER_EVENTS_REQUIRED_ACKS }} \
+            --env KAFKA_PRODUCER_USER_EVENTS_RETRY_MAX=${{ secrets.KAFKA_PRODUCER_USER_EVENTS_RETRY_MAX }} \
+            --env KAFKA_PRODUCER_USER_EVENTS_RETURN_SUCCESSES=${{ secrets.KAFKA_PRODUCER_USER_EVENTS_RETURN_SUCCESSES }} \
             --env GRPC_PORT=${{ secrets.GRPC_PORT }} \
+            --env HTTP_PORT=${{ secrets.HTTP_PORT }} \
+            --env HTTP_SHUTDOWN_TIMEOUT=${{ vars.HTTP_SHUTDOWN_TIMEOUT }} \
+            --env HTTP_READ_HEADER_TIMEOUT=${{ vars.HTTP_READ_HEADER_TIMEOUT }} \
+            --env SWAGGER_PORT=${{ secrets.SWAGGER_PORT }} \
+            --env SWAGGER_SHUTDOWN_TIMEOUT=${{ vars.SWAGGER_SHUTDOWN_TIMEOUT }} \
+            --env SWAGGER_READ_HEADER_TIMEOUT=${{ vars.SWAGGER_READ_HEADER_TIMEOUT }} \
             --network auth_internal_network \
+            --network kafka_network \
             -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
             
             # Connect service to external network

@@ -5,54 +5,124 @@ package user_v1;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/Paul1k96/microservices_course_auth/pkg/user_v1;user_v1";
 
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+    info: {
+        title: "User API"
+        version: "1.0.0"
+        contact: {
+            name: "Timofeev Pavel"
+            email: "timofeev.pavel.art@gmail.com"
+        };
+    };
+
+    host: "localhost:8080",
+    schemes: HTTP,
+    schemes: HTTPS,
+    consumes: "application/json",
+    produces: "application/json",
+};
+
 service User {
-    rpc Create(CreateRequest) returns (CreateResponse);
-    rpc Get(GetRequest) returns (GetResponse);
-    rpc List(GetListRequest) returns (GetListResponse);
-    rpc Update(UpdateRequest) returns (UpdateResponse);
-    rpc Delete(DeleteRequest) returns (DeleteResponse);
+    // Create user
+    rpc Create(CreateRequest) returns (CreateResponse){
+        option (google.api.http) = {
+            post: "/user/v1"
+            body: "*"
+        };
+    }
+
+    // Get user by id
+    rpc Get(GetRequest) returns (GetResponse){
+        option (google.api.http) = {
+            get: "/user/v1"
+        };
+    }
+
+    // Get list of users by ids
+    rpc List(GetListRequest) returns (GetListResponse){
+        option (google.api.http) = {
+            get: "/user/v1/list"
+        };
+    }
+
+    // Update user by id
+    rpc Update(UpdateRequest) returns (UpdateResponse){
+        option (google.api.http) = {
+            patch: "/user/v1"
+            body: "*"
+        };
+    }
+
+    // Delete user by id
+    rpc Delete(DeleteRequest) returns (DeleteResponse){
+        option (google.api.http) = {
+            delete: "/user/v1"
+        };
+    }
 }
 
 message CreateRequest {
-    string name = 1;
-    string email = 2;
+    // User name
+    string name = 1 [(validate.rules).string = {min_len: 2, max_len: 100}];
+    // User email
+    string email = 2 [(validate.rules).string = {min_len: 5, max_len: 100}];
+    // User password
     string password = 3;
+    // User password confirmation
     string password_confirm = 4;
+    // User role
     Role role = 5;
 }
 
 message CreateResponse {
+    // User id
     int64 id = 1;
 }
 
 message GetRequest {
+    // User id
     int64 id = 1;
 }
 
 message GetResponse {
+    // User id
     int64 id = 1;
+    // User name
     string name = 2;
+    // User email
     string email = 3;
+    // User role
     Role role = 4;
+    // User created at
     google.protobuf.Timestamp created_at = 5;
+    // User updated at
     google.protobuf.Timestamp updated_at = 6;
 }
 
 message GetListRequest {
+    // User ids
     repeated int64 ids = 1;
 }
 
 message GetListResponse {
+    // List of users
     repeated GetResponse users = 1;
 }
 
 message UpdateRequest {
+    // User id
     int64 id = 1;
-    google.protobuf.StringValue name = 2;
-    google.protobuf.StringValue email = 3;
+    // User name
+    google.protobuf.StringValue name = 2 [(validate.rules).string = {min_len: 2, max_len: 100}];
+    // User email
+    google.protobuf.StringValue email = 3 [(validate.rules).string = {min_len: 5, max_len: 100}];
+    // User role
     Role role = 4;
 }
 
@@ -61,6 +131,7 @@ message UpdateResponse {
 }
 
 message DeleteRequest {
+    // User id
     int64 id = 1;
 }
 
@@ -69,7 +140,10 @@ message DeleteResponse {
 }
 
 enum Role {
+    // Unknown role
     UNKNOWN = 0;
+    // User role
     USER = 1;
+    // Admin role
     ADMIN = 2;
 }

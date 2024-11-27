@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-//go:generate ../../bin/enumer -transform snake-upper -trimprefix Role -type Role -output role_string.go model.go
+//go:generate ../../bin/enumer -transform snake-upper -trimprefix Role -type Role -output user_role_string.go user.go
 
 // User roles.
 const (

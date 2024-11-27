@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"log/slog"
-	"strings"
 	"testing"
 
 	"github.com/Paul1k96/microservices_course_auth/internal/model"
@@ -28,8 +27,9 @@ type CreateUserSuite struct {
 	*require.Assertions
 	ctrl *gomock.Controller
 
-	userRepo  *mocks.MockUsersRepository
-	userCache *mocks.MockUsersCache
+	userRepo   *mocks.MockUsersRepository
+	userCache  *mocks.MockUsersCache
+	userEvents *mocks.MockUserEventsRepository
 
 	service service.UserService
 }
@@ -40,8 +40,9 @@ func (t *CreateUserSuite) SetupTest() {
 
 	t.userRepo = mocks.NewMockUsersRepository(t.ctrl)
 	t.userCache = mocks.NewMockUsersCache(t.ctrl)
+	t.userEvents = mocks.NewMockUserEventsRepository(t.ctrl)
 
-	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userCache)
+	t.service = user.NewService(slog.Default(), infraMocks.NewNopTxManager(), t.userRepo, t.userEvents, t.userCache)
 }
 
 func (t *CreateUserSuite) TearDownTest() {
@@ -82,53 +83,11 @@ func (t *CreateUserSuite) TestCreateUser_Ok() {
 	}
 
 	t.userRepo.EXPECT().Create(args.ctx, args.user).Return(want.id, want.err)
+	args.user.ID = want.id
 
 	t.userCache.EXPECT().Set(args.ctx, args.user).Return(nil)
 
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_EmptyName() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Name = ""
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("name is required"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_TooShortName() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Name = "a"
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("name must be at least 2 characters"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_TooLongName() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Name = strings.Repeat("a", 101)
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("name must be at most 100 characters"),
-	}
+	t.userEvents.EXPECT().Save(args.ctx, gomock.Any())
 
 	t.do(args, want)
 }
@@ -143,51 +102,6 @@ func (t *CreateUserSuite) TestCreateUser_NameContainsRestrictedSymbols() {
 	want := CreateUserWant{
 		id:  0,
 		err: errors.New("name contains restricted symbols"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_EmailIsEmpty() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Email = ""
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("email is required"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_EmailTooShort() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Email = "a"
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("email must be at least 5 characters"),
-	}
-
-	t.do(args, want)
-}
-
-func (t *CreateUserSuite) TestCreateUser_EmailTooLong() {
-	args := CreateUserArgs{
-		ctx:  context.Background(),
-		user: tm.NewUser(),
-	}
-	args.user.Email = strings.Repeat("a", 101) + "@gmail.com"
-
-	want := CreateUserWant{
-		id:  0,
-		err: errors.New("email must be at most 100 characters"),
 	}
 
 	t.do(args, want)
