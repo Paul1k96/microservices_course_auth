@@ -199,8 +199,10 @@ jobs:
             --env SWAGGER_SHUTDOWN_TIMEOUT=${{ vars.SWAGGER_SHUTDOWN_TIMEOUT }} \
             --env SWAGGER_READ_HEADER_TIMEOUT=${{ vars.SWAGGER_READ_HEADER_TIMEOUT }} \
             --network auth_internal_network \
-            --network kafka_network \
             -t $REGISTRY/$IMAGE_NAME:$TAG_NAME
+            
+            # Connect services to multiple networks
+            docker network connect kafka_network $CONTAINER_NAME
             
             # Connect service to external network
             docker network connect universe $CONTAINER_NAME
